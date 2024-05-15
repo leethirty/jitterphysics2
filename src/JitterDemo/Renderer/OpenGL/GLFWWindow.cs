@@ -267,8 +267,8 @@ public class GLFWWindow
         GLFW.SetErrorCallback(errorFunction);
     }
 
-    private int targetFPS = 100;
-    private double targetTicks = Stopwatch.Frequency / 100.0d;
+    private int targetFPS = 20;
+    private double targetTicks = Stopwatch.Frequency / 20.0d;
 
     public int TargetFPS
     {

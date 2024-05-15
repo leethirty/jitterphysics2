@@ -361,7 +361,7 @@ public struct ContactData
     public struct Contact
     {
         public const float MaximumBias = 100.0f;
-        public const float BiasFactor = 0.2f;
+        public const float BiasFactor = 0.0f;
         public const float AllowedPenetration = 0.01f;
         public const float BreakThreshold = 0.02f;
 
@@ -502,8 +502,14 @@ public struct ContactData
         public void PrepareForIteration(ref RigidBodyData b1, ref RigidBodyData b2,
             float idt, bool speculative = false)
         {
-            if ((Flag & Flags.NewContact) != 0) Flag = Flags.NewContact;
-            else Flag = 0;
+            if ((Flag & Flags.NewContact) != 0)
+            {
+                Flag = Flags.NewContact;
+            }
+            else
+            {
+                Flag = 0;
+            }
 
             // redundant if contact has just been initialized or updateposition was called
             // before <=> it is redundant the first time it is called in world.step <=> it is
@@ -615,19 +621,21 @@ public struct ContactData
 
         public void Iterate(ref RigidBodyData b1, ref RigidBodyData b2)
         {
+            // Solve tangent constraints first because non-penetration is more important
+            // than friction.
+            IterateTangentConstraints(ref b1, ref b2);
+
+            //Solve normal constraints
+            IterateNormalConstraints(ref b1, ref b2);
+        }
+
+        private void IterateTangentConstraints(ref RigidBodyData b1, ref RigidBodyData b2)
+        {
             JVector dv = b2.Velocity + b2.AngularVelocity % RelativePos2;
             dv -= b1.Velocity + b1.AngularVelocity % RelativePos1;
 
-            float vn = JVector.Dot(Normal, dv);
             float vt1 = JVector.Dot(Tangent1, dv);
             float vt2 = JVector.Dot(Tangent2, dv);
-
-            float normalImpulse = Bias - vn;
-            normalImpulse *= MassNormal;
-
-            float oldNormalImpulse = AccumulatedNormalImpulse;
-            AccumulatedNormalImpulse = MathF.Max(oldNormalImpulse + normalImpulse, 0.0f);
-            normalImpulse = AccumulatedNormalImpulse - oldNormalImpulse;
 
             float maxTangentImpulse = Friction * AccumulatedNormalImpulse;
             float tangentImpulse1 = MassTangent1 * -vt1;
@@ -644,13 +652,38 @@ public struct ContactData
             tangentImpulse2 = AccumulatedTangentImpulse2 - oldTangentImpulse2;
 
             // Apply contact impulse
-            JVector impulse = normalImpulse * Normal + tangentImpulse1 * Tangent1 + tangentImpulse2 * Tangent2;
+            JVector impulse = tangentImpulse1 * Tangent1 + tangentImpulse2 * Tangent2;
 
             b1.Velocity -= b1.InverseMass * impulse;
-            b1.AngularVelocity -= normalImpulse * M_n1 + tangentImpulse1 * M_t1 + tangentImpulse2 * M_tt1;
+            b1.AngularVelocity -= tangentImpulse1 * M_t1 + tangentImpulse2 * M_tt1;
 
             b2.Velocity += b2.InverseMass * impulse;
-            b2.AngularVelocity += normalImpulse * M_n2 + tangentImpulse1 * M_t2 + tangentImpulse2 * M_tt2;
+            b2.AngularVelocity += tangentImpulse1 * M_t2 + tangentImpulse2 * M_tt2;
         }
+
+        private void IterateNormalConstraints(ref RigidBodyData b1, ref RigidBodyData b2)
+        {
+            JVector dv = b2.Velocity + b2.AngularVelocity % RelativePos2;
+            dv -= b1.Velocity + b1.AngularVelocity % RelativePos1;
+
+            float vn = JVector.Dot(Normal, dv);
+
+            float normalImpulse = Bias - vn;
+            normalImpulse *= MassNormal;
+
+            float oldNormalImpulse = AccumulatedNormalImpulse;
+            AccumulatedNormalImpulse = MathF.Max(oldNormalImpulse + normalImpulse, 0.0f);
+            normalImpulse = AccumulatedNormalImpulse - oldNormalImpulse;
+
+            // Apply contact impulse
+            JVector impulse = normalImpulse * Normal;
+
+            b1.Velocity -= b1.InverseMass * impulse;
+            b1.AngularVelocity -= normalImpulse * M_n1;
+
+            b2.Velocity += b2.InverseMass * impulse;
+            b2.AngularVelocity += normalImpulse * M_n2;
+        }
+
     }
 }

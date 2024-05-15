@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Jitter2;
 using Jitter2.Collision.Shapes;
 using Jitter2.Dynamics;
 using Jitter2.LinearMath;
+using JitterDemo.Demos;
 using JitterDemo.Renderer;
 using JitterDemo.Renderer.OpenGL;
 
@@ -49,7 +51,8 @@ public partial class Playground : RenderWindow
         new Demo17(),
         // new Demo18(),  // point test
         // new Demo19(),  // ray cast test
-        new Demo20()
+        new Demo20(),
+        new DemoTestGravity(),
     };
 
     private IDemo? currentDemo;
@@ -75,8 +78,8 @@ public partial class Playground : RenderWindow
         if (addFloor)
         {
             RigidBody body = World.CreateRigidBody();
-            floorShape = new BoxShape(200, 200, 200);
-            body.Position = new JVector(0, -100, 0f);
+            floorShape = new BoxShape(200, 1, 200);
+            body.Position = new JVector(0, -0.5f, 0f);
             body.IsStatic = true;
             body.AddShape(floorShape);
         }
@@ -85,7 +88,7 @@ public partial class Playground : RenderWindow
         world.BroadPhaseFilter = null;
         world.Gravity = new JVector(0, -9.81f, 0);
         world.NumberSubsteps = 1;
-        world.SolverIterations = 12;
+        world.SolverIterations = 6;
     }
 
     public override void Load()
@@ -115,11 +118,19 @@ public partial class Playground : RenderWindow
         sb.AddShape(ss);
     }
 
+    private double targetTicks = Stopwatch.Frequency / 20.0d;
+    private long time = -1;
+
     public override void Draw()
     {
         // if (Keyboard.KeyPressBegin(Keyboard.Key.P))
 
-        world.Step(1.0f / 100.0f, multiThread);
+        var now = Stopwatch.GetTimestamp();
+        if ((now - time) > targetTicks)
+        {
+            time = Stopwatch.GetTimestamp();
+            world.Step(0.05f, multiThread);
+        }
 
         UpdateDisplayText();
         LayoutGui();

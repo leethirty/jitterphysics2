@@ -61,8 +61,8 @@ public class Mesh
         string[] content = filename.EndsWith(".zip") ? ReadFromZip(filename).ToArray() : File.ReadAllLines(filename);
         var lines = content.Select(s => s.Trim()).Where(s => s != string.Empty);
 
-        List<Vector3> v = [], vn = [];
-        List<Vector2> vt = [];
+        List<Vector3> v = new List<Vector3>(), vn = new List<Vector3>();
+        List<Vector2> vt = new List<Vector2>();
 
         foreach (string line in lines)
         {
@@ -85,8 +85,8 @@ public class Mesh
         bool hasNormals = vn.Count > 0;
 
         Dictionary<string, int> dict = new();
-        List<Vertex> vertices = [];
-        List<TriangleVertexIndex> indices = [];
+        List<Vertex> vertices = new List<Vertex>();
+        List<TriangleVertexIndex> indices = new List<TriangleVertexIndex>();
 
         int AddVertex(string s)
         {
@@ -113,7 +113,7 @@ public class Mesh
             }
         }
 
-        List<Group> groups = [];
+        List<Group> groups = new List<Group>();
         Group groupLast = new();
         bool firstGroup = true;
 

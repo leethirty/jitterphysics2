@@ -69,12 +69,14 @@ public partial class World
 
             if (Lcount > 0)
             {
-                if ((Left[0] - v).LengthSquared() < Epsilon) return;
+                if ((Left[0] - v).LengthSquared() < Epsilon) 
+                    return;
             }
 
             if (Lcount > 1)
             {
-                if ((Left[Lcount - 1] - v).LengthSquared() < Epsilon) return;
+                if ((Left[Lcount - 1] - v).LengthSquared() < Epsilon)
+                    return;
             }
 
             Left[Lcount++] = v;
@@ -90,12 +92,14 @@ public partial class World
 
             if (Rcount > 0)
             {
-                if ((Right[0] - v).LengthSquared() < Epsilon) return;
+                if ((Right[0] - v).LengthSquared() < Epsilon) 
+                    return;
             }
 
             if (Rcount > 1)
             {
-                if ((Right[Rcount - 1] - v).LengthSquared() < Epsilon) return;
+                if ((Right[Rcount - 1] - v).LengthSquared() < Epsilon) 
+                    return;
             }
 
             Right[Rcount++] = v;
@@ -259,6 +263,8 @@ public partial class World
 
     [ThreadStatic] private static ConvexHullIntersection cvh;
 
+    private int frameCount;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Detect(Shape sA, Shape sB)
     {
@@ -311,6 +317,8 @@ public partial class World
             colliding = NarrowPhase.MPREPA(sA, sB, b1.Orientation, b2.Orientation, b1.Position, b2.Position,
                 out pA, out pB, out normal, out penetration);
         }
+
+        Debug.WriteLine($"{++frameCount}, {b1.Position}, {b2.Position}, {pA}, {pB}, {normal}, {penetration}");
 
         Debug.Assert(!float.IsNaN(normal.X));
 
@@ -381,6 +389,8 @@ public partial class World
             {
                 JVector ptNormal = normal + hexagonVertices[e].X * 0.01f * crossVector1 +
                                    hexagonVertices[e].Y * 0.01f * crossVector2;
+
+                Debug.WriteLine($"ptNormal :  {e}, {ptNormal}");
 
                 Support(sA, ptNormal, out JVector np1);
                 cvh.PushLeft(np1);
