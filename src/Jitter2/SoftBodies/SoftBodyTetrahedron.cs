@@ -24,6 +24,8 @@
 using Jitter2.Collision.Shapes;
 using Jitter2.Dynamics;
 using Jitter2.LinearMath;
+using System.Collections.Generic;
+using System;
 
 namespace Jitter2.SoftBodies;
 
@@ -132,4 +134,15 @@ public class SoftBodyTetrahedron : Shape, ISoftBodyShape
 
         result = Vertices[furthest].Position;
     }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        throw new NotImplementedException();
+    }
+
 }

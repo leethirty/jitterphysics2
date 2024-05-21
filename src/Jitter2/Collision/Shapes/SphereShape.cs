@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Jitter2.LinearMath;
 
 namespace Jitter2.Collision.Shapes;
@@ -62,6 +63,18 @@ public class SphereShape : Shape
         result = direction;
         result.Normalize();
         JVector.Multiply(result, radius, out result);
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        /* Hit is always a single point, no point in returning anything */
+        outVertices = new List<JVector>();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        float len = inLocalSurfacePosition.Length();
+        return len != 0.0f ? JVector.Multiply(inLocalSurfacePosition, 1f / len) : new JVector(0, 1, 0);
     }
 
     public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)

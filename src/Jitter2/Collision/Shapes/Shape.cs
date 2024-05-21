@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Jitter2.DataStructures;
 using Jitter2.Dynamics;
 using Jitter2.LinearMath;
@@ -229,6 +230,19 @@ public abstract class Shape : ISupportMap, IListIndex, IDynamicTreeProxy
         JVector.Add(box.Max, position, out box.Max);
     }
 
+    //public abstract JBBox GetLocalBoundingBox();
+
     /// <inheritdoc/>
     public abstract void SupportMap(in JVector direction, out JVector result);
+
+    /// <summary>
+    /// Get the vertices of the face that faces inDirection the most (includes any convex radius). Note that this function can only return faces of convex shapes or triangles
+    /// </summary>
+    /// <param name="direction">inDirection Direction that the face should be facing (in local space to this shape)</param>
+    /// <param name="orientation"></param>
+    /// <param name="position"></param>
+    /// <param name="outVertices"> The returned face can be empty( or null) if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.</param>
+    public abstract void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices);
+
+    public abstract JVector SurfaceNormal(JVector inLocalSurfacePosition);
 }

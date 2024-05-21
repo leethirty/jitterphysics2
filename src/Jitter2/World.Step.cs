@@ -189,6 +189,8 @@ public partial class World
         ForeachActiveShape(multiThread);
         SetTime(Timings.UpdateBodies);
 
+        SolvePosition(solverPositionIterations);
+
         // Perform collision detection.
         // In the callback:
         // If both bodies are static we do nothing.
@@ -663,6 +665,29 @@ public partial class World
 
             dorn.Normalize();
             JMatrix.CreateFromQuaternion(dorn, out rigidBody.Orientation);
+        }
+    }
+
+    private void SolvePosition(int iterations)
+    {
+        Parallel.Batch batch = new(0, memContacts.Active.Length);
+
+        for (int iter = 0; iter < iterations; iter++)
+        {
+            var span = memContacts.Active[batch.Start..batch.End];
+
+            for (int i = 0; i < span.Length; i++)
+            {
+                ref ContactData c = ref span[i];
+                ref RigidBodyData b1 = ref c.Body1.Data;
+                ref RigidBodyData b2 = ref c.Body2.Data;
+
+                AssertConstraint(ref b1, ref b2);
+
+                LockTwoBody(ref b1, ref b2);
+                c.IteratePosition();
+                UnlockTwoBody(ref b1, ref b2);
+            }
         }
     }
 

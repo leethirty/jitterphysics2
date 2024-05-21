@@ -22,6 +22,8 @@
  */
 
 using Jitter2.LinearMath;
+using System.Collections.Generic;
+using System;
 
 namespace Jitter2.Collision.Shapes;
 
@@ -114,6 +116,16 @@ public class TransformedShape : Shape
             JVector.Transform(sm, transformation, out result);
             result += translation;
         }
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        throw new NotImplementedException();
     }
 
     public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)

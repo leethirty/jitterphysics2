@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Jitter2.LinearMath;
 
 namespace Jitter2.Collision.Shapes;
@@ -98,6 +99,16 @@ public class ConeShape : Shape
         {
             result = new JVector(0, 0.75f * height, 0);
         }
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        throw new NotImplementedException();
     }
 
     public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)

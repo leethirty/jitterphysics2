@@ -331,4 +331,14 @@ public class ConvexHullShape : Shape
     {
         InternalSupportMap(direction, out result);
     }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        throw new NotImplementedException();
+    }
 }

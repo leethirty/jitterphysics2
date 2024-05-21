@@ -153,6 +153,16 @@ public struct JVector
         return result;
     }
 
+    public static int GetLowestComponentIndex(in JVector value1)
+    {
+        return value1.X < value1.Y ? (value1.Z < value1.X ? 2 : 0) : (value1.Z < value1.Y ? 2 : 1);
+    }
+
+    public static int GetHighestComponentIndex(in JVector value1)
+    {
+        return value1.X > value1.Y ? (value1.Z > value1.X ? 2 : 0) : (value1.Z > value1.Y ? 2 : 1);
+    }
+
     public static JVector Abs(in JVector value1)
     {
         return new JVector(MathF.Abs(value1.X), MathF.Abs(value1.Y), MathF.Abs(value1.Z));

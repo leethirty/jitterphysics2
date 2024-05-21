@@ -21,6 +21,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
+
 namespace Jitter2.LinearMath;
 
 /// <summary>
@@ -251,4 +253,64 @@ public struct JBBox
         2.0f * ((Max.X - Min.X) * (Max.Y - Min.Y) +
                 (Max.X - Min.X) * (Max.Z - Min.Z) +
                 (Max.Z - Min.Z) * (Max.Y - Min.Y));
+
+    public void GetSupportingFace(JVector inDirection, out List<JVector> outVertices)
+    {
+        outVertices = new List<JVector>(4);
+
+        int axis = JVector.GetHighestComponentIndex(JVector.Abs(inDirection));
+        if (inDirection[axis] < 0.0f)
+        {
+            switch (axis)
+            {
+                case 0:
+                    outVertices.Add(new JVector(Max.X, Min.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Max.Z));
+                    outVertices.Add(new JVector(Max.X, Min.Y, Max.Z));
+                    break;
+
+                case 1:
+                    outVertices.Add(new JVector(Min.X, Max.Y, Min.Z));
+                    outVertices.Add(new JVector(Min.X, Max.Y, Max.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Max.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Min.Z));
+                    break;
+
+                case 2:
+                    outVertices.Add(new JVector(Min.X, Min.Y, Max.Z));
+                    outVertices.Add(new JVector(Max.X, Min.Y, Max.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Max.Z));
+                    outVertices.Add(new JVector(Min.X, Max.Y, Max.Z));
+                    break;
+            }
+        }
+        else
+        {
+            switch (axis)
+            {
+                case 0:
+                    outVertices.Add(new JVector(Min.X, Min.Y, Min.Z));
+                    outVertices.Add(new JVector(Min.X, Min.Y, Max.Z));
+                    outVertices.Add(new JVector(Min.X, Max.Y, Max.Z));
+                    outVertices.Add(new JVector(Min.X, Max.Y, Min.Z));
+                    break;
+
+                case 1:
+                    outVertices.Add(new JVector(Min.X, Min.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Min.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Min.Y, Max.Z));
+                    outVertices.Add(new JVector(Min.X, Min.Y, Max.Z));
+                    break;
+
+                case 2:
+                    outVertices.Add(new JVector(Min.X, Min.Y, Min.Z));
+                    outVertices.Add(new JVector(Min.X, Max.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Max.Y, Min.Z));
+                    outVertices.Add(new JVector(Max.X, Min.Y, Min.Z));
+                    break;
+            }
+        }
+    }
+
 }

@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Jitter2.LinearMath;
 
 namespace Jitter2.Collision.Shapes;
@@ -83,6 +84,31 @@ public class BoxShape : Shape
         result.X = Math.Sign(direction.X) * halfSize.X;
         result.Y = Math.Sign(direction.Y) * halfSize.Y;
         result.Z = Math.Sign(direction.Z) * halfSize.Z;
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        JBBox box = new JBBox(-halfSize, halfSize);
+        box.GetSupportingFace(direction, out outVertices);
+
+        for (int i = 0; i < outVertices.Count; i++)
+        {
+            JVector.Transform(outVertices[i], orientation, out var temp);
+            JVector.Add(temp, position, out temp);
+            outVertices[i] = temp;
+        }
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        // Get component that is closest to the surface of the box
+        int index = JVector.GetLowestComponentIndex(JVector.Abs(JVector.Abs(inLocalSurfacePosition) - halfSize));
+
+        // Calculate normal
+        var normal = JVector.Zero;
+        normal[index] = inLocalSurfacePosition[index] > 0.0f ? 1.0f : -1.0f;
+
+        return normal;
     }
 
     public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)

@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Jitter2.Collision.Shapes;
 using Jitter2.Dynamics;
 using Jitter2.LinearMath;
@@ -128,5 +129,15 @@ public class SoftBodyTriangle : Shape, ISoftBodyShape
         }
 
         result += JVector.Normalize(direction) * halfThickness;
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
+    {
+        throw new NotImplementedException();
     }
 }

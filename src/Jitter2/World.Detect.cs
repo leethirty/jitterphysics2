@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -365,13 +366,28 @@ public partial class World
             }
         }
 
+        List<JVector> outContactPoints1 = new List<JVector>();
+        List<JVector> outContactPoints2 = new List<JVector>();
+        {
+            JVector.Subtract(pA, b1.Position, out var relativePos1);
+            JVector.Subtract(pB, b2.Position, out var relativePos2);
+            JVector.TransposedTransform(relativePos1, b1.Orientation, out var realRelPos1);
+            JVector.TransposedTransform(relativePos2, b2.Orientation, out var realRelPos2);
+
+            var penetration_axis = normal;
+            JVector.TransposedTransform(penetration_axis, b1.Orientation, out var penetration_axis1);
+            JVector.TransposedTransform(penetration_axis, b2.Orientation, out var penetration_axis2);
+
+            sA.SupportingFace(-penetration_axis1, b1.Orientation, b1.Position, out var outVertices1);
+            sB.SupportingFace(penetration_axis2, b2.Orientation, b2.Position, out var outVertices2);
+
+            ManifoldBetweenTwoFacesHelper.ManifoldBetweenTwoFaces(pA, pB, normal, penetration, outVertices1, outVertices2, outContactPoints1, outContactPoints2);
+        }
+
         GetArbiter(sA.ShapeId, sB.ShapeId, sA.RigidBody, sB.RigidBody, out Arbiter arbiter);
 
         // Auxiliary Flat Surface Contact Points
-        //
-
-        cvh.Init();
-
+        /*cvh.Init();
         if (EnableAuxiliaryContactPoints)
         {
             static void Support(Shape shape, in JVector direction, out JVector v)
@@ -401,7 +417,7 @@ public partial class World
             }
 
             cvh.BuildManifold(pA, pB, normal, penetration);
-        }
+        }*/
 
         lock (arbiter)
         {
@@ -418,14 +434,23 @@ public partial class World
 
             arbiter.Handle.Data.IsSpeculative = false;
 
-            for (int e = 0; e < cvh.Mcount; e++)
+            for(int e = 0; e < outContactPoints1.Count; e++ )
+            {
+                JVector mfA = outContactPoints1[e];
+                JVector mfB = outContactPoints2[e];
+
+                float nd = JVector.Dot(mfA - mfB, normal);
+                arbiter.Handle.Data.AddContact(mfA, mfB, normal, nd);
+            }
+
+            /*for (int e = 0; e < cvh.Mcount; e++)
             {
                 JVector mfA = cvh.ManifoldA[e];
                 JVector mfB = cvh.ManifoldB[e];
 
                 float nd = JVector.Dot(mfA - mfB, normal);
                 arbiter.Handle.Data.AddContact(mfA, mfB, normal, nd);
-            }
+            }*/
 
             arbiter.Handle.Data.AddContact(pA, pB, normal, penetration);
 

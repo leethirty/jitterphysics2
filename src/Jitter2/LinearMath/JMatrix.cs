@@ -441,6 +441,15 @@ public struct JMatrix
         result.M33 = matrix.M33;
     }
 
+    public static JMatrix PreScaled(in JMatrix matrix, JVector inScale)
+    {
+        var temp = Transpose(matrix);
+        
+        var temp2 = FromColumns(temp.GetColumn(0) * inScale.X, temp.GetColumn(1) * inScale.Y, temp.GetColumn(2) * inScale.Z);
+        temp = Transpose(temp2);
+        return temp;
+    }
+
     public static JMatrix operator *(in JMatrix matrix1, in JMatrix matrix2)
     {
         JMatrix result;

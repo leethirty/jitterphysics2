@@ -31,13 +31,15 @@ namespace Jitter2.Collision;
 public interface ISupportMap
 {
     /// <summary>
+    /// Gets the geometric center of the shape. For a shape with a constant mass density, this represents the center of mass.
+    /// </summary>
+    JVector GeometricCenter { get; }
+
+    /// <summary>
     /// Identifies the point on the shape that is furthest in the specified direction.
     /// </summary>
     /// <param name="direction">The direction in which to search for the furthest point. It does not need to be normalized.</param>
     void SupportMap(in JVector direction, out JVector result);
 
-    /// <summary>
-    /// Gets the geometric center of the shape. For a shape with a constant mass density, this represents the center of mass.
-    /// </summary>
-    JVector GeometricCenter { get; }
+
 }

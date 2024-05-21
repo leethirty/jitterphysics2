@@ -73,6 +73,14 @@ public struct ContactData
         if ((UsageMask & 0b1000) != 0) Contact3.Iterate(ref Body1.Data, ref Body2.Data);
     }
 
+    public void IteratePosition()
+    {
+        if ((UsageMask & 0b0001) != 0) Contact0.IteratePosition(ref Body1.Data, ref Body2.Data);
+        if ((UsageMask & 0b0010) != 0) Contact1.IteratePosition(ref Body1.Data, ref Body2.Data);
+        if ((UsageMask & 0b0100) != 0) Contact2.IteratePosition(ref Body1.Data, ref Body2.Data);
+        if ((UsageMask & 0b1000) != 0) Contact3.IteratePosition(ref Body1.Data, ref Body2.Data);
+    }
+
     public int UpdatePosition()
     {
         int delc = 0;
@@ -627,6 +635,78 @@ public struct ContactData
 
             //Solve normal constraints
             IterateNormalConstraints(ref b1, ref b2);
+        }
+
+        /// How much bodies are allowed to sink into each other (unit: meters)
+        private const  float PenetrationSlop = 0.02f;
+        /// Maximum distance to correct in a single iteration when solving position constraints (unit: meters)
+        private const float MaxPenetrationDistance = 0.2f;
+        /// Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update) (unit: dimensionless, 0 = nothing, 1 = 100%)
+        private const float Baumgarte = 0.2f;
+
+        public void IteratePosition(ref RigidBodyData b1, ref RigidBodyData b2)
+        {
+            // Calculate new contact point positions in world space (the bodies may have moved)
+            JVector.Transform(RealRelPos1, b1.Orientation, out RelativePos1);
+            JVector.Transform(RealRelPos2, b2.Orientation, out RelativePos2);
+            JVector.Add(RelativePos1, b1.Position, out JVector p1);
+            JVector.Add(RelativePos2, b2.Position, out JVector p2);
+
+            // Calculate separation along the normal (negative if interpenetrating)
+            // Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
+            // Clamp penetration to a max PhysicsSettings::mMaxPenetrationDistance so that we don't apply a huge impulse if we're penetrating a lot
+            float separation = MathF.Max(JVector.Dot (p2 - p1, Normal) + PenetrationSlop, -MaxPenetrationDistance);
+
+            // Only enforce constraint when separation < 0 (otherwise we're apart)
+            if (separation > 0.0f)
+            {
+                return;
+            }
+
+            // Update constraint properties (bodies may have moved)
+            //wcp.CalculateNonPenetrationConstraintProperties(body1, constraint.mInvMass1, constraint.mInvInertiaScale1, body2, constraint.mInvMass2, constraint.mInvInertiaScale2, p1, p2, ws_normal);
+
+
+            // Solve position errors
+            if(separation != 0)
+            {
+                // Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
+                //
+                // lambda = -K^-1 * beta / dt * C
+                //
+                // We should divide by inDeltaTime, but we should multiply by inDeltaTime in the Euler step below so they're cancelled out
+                float lambda = -MassNormal * Baumgarte * separation;
+
+                // Directly integrate velocity change for one time step
+                //
+                // Euler velocity integration:
+                // dv = M^-1 P
+                //
+                // Impulse:
+                // P = J^T lambda
+                //
+                // Euler position integration:
+                // x' = x + dv * dt
+                //
+                // Note we don't accumulate velocities for the stabilization. This is using the approach described in 'Modeling and
+                // Solving Constraints' by Erin Catto presented at GDC 2007. On slide 78 it is suggested to split up the Baumgarte
+                // stabilization for positional drift so that it does not actually add to the momentum. We combine an Euler velocity
+                // integrate + a position integrate and then discard the velocity change.
+                if (!b1.IsStaticOrInactive)
+                {
+                    b1.Position -= lambda * b1.InverseMass * Normal;
+
+                    //ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
+                    b1.AngularVelocity -= lambda * M_n1;
+                }
+                if (!b2.IsStaticOrInactive)
+                {
+                    b2.Position += lambda * b2.InverseMass * Normal;
+
+                    //ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
+                    b2.AngularVelocity += lambda * M_n2;
+                }
+            }
         }
 
         private void IterateTangentConstraints(ref RigidBodyData b1, ref RigidBodyData b2)

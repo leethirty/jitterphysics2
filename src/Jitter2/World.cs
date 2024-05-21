@@ -213,7 +213,8 @@ public partial class World
 
     // Make this global since it is used by nearly every method called
     // in World.Step.
-    private volatile int solverIterations = 8;
+    private volatile int solverIterations = 6;
+    private volatile int solverPositionIterations = 1;
     private volatile int substeps = 1;
 
     private volatile float substep_dt = 1.0f / 100.0f;
