@@ -655,7 +655,7 @@ public struct ContactData
             // Calculate separation along the normal (negative if interpenetrating)
             // Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
             // Clamp penetration to a max PhysicsSettings::mMaxPenetrationDistance so that we don't apply a huge impulse if we're penetrating a lot
-            float separation = MathF.Max(JVector.Dot (p2 - p1, Normal) + PenetrationSlop, -MaxPenetrationDistance);
+            float separation = MathF.Max(JVector.Dot(p2 - p1, Normal) + PenetrationSlop, -MaxPenetrationDistance);
 
             // Only enforce constraint when separation < 0 (otherwise we're apart)
             if (separation > 0.0f)
@@ -668,7 +668,7 @@ public struct ContactData
 
 
             // Solve position errors
-            if(separation != 0)
+            if (separation != 0)
             {
                 // Calculate lagrange multiplier (lambda) for Baumgarte stabilization:
                 //
@@ -699,6 +699,7 @@ public struct ContactData
                     //ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
                     b1.AngularVelocity -= lambda * M_n1;
                 }
+
                 if (!b2.IsStaticOrInactive)
                 {
                     b2.Position += lambda * b2.InverseMass * Normal;

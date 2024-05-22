@@ -2,6 +2,7 @@
 using Jitter2.LinearMath;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,9 +13,114 @@ namespace Jitter2.Collision
     {
 
         /// Remove contact points if there are > 4 (no more than 4 are needed for a stable solution)
-        public static void PruneContactPoints()
+        public static void PruneContactPoints(JVector inPenetrationAxis, List<JVector> ioContactPointsOn1, List<JVector> ioContactPointsOn2)
         {
+            // Makes no sense to call this with 4 or less points
+            Debug.Assert(ioContactPointsOn1.Count > 4);
 
+            // Both arrays should have the same size
+            Debug.Assert(ioContactPointsOn1.Count == ioContactPointsOn2.Count);
+
+            // Penetration axis must be normalized
+            Debug.Assert(MathF.Abs(inPenetrationAxis.LengthSquared() - 1) <= 0.0000009f);
+
+            // We use a heuristic of (distance to center of mass) * (penetration depth) to find the contact point that we should keep
+            // Neither of those two terms should ever become zero, so we clamp against this minimum value
+            const float cMinDistanceSq = 1.0e-6f; // 1 mm
+
+            List<JVector> projected = new List<JVector>();
+            List<float> penetration_depth_sq = new List<float>();
+            for (int i = 0; i < ioContactPointsOn1.Count; ++i)
+            {
+                // Project contact points on the plane through inCenterOfMass with normal inPenetrationAxis and center around the center of mass of body 1
+                // (note that since all points are relative to inCenterOfMass we can project onto the plane through the origin)
+                var v1 = ioContactPointsOn1[i];
+                projected.Add(v1 - JVector.Dot(v1, inPenetrationAxis) * inPenetrationAxis);
+
+                // Calculate penetration depth^2 of each point and clamp against the minimal distance
+                var v2 = ioContactPointsOn2[i];
+                penetration_depth_sq.Add(MathF.Max(cMinDistanceSq, (v2 - v1).LengthSquared()));
+            }
+
+            // Find the point that is furthest away from the center of mass (its torque will have the biggest influence)
+            // and the point that has the deepest penetration depth. Use the heuristic (distance to center of mass) * (penetration depth) for this.
+            int point1 = 0;
+            float val = MathF.Max(cMinDistanceSq, projected[0].LengthSquared()) * penetration_depth_sq[0];
+            for (int i = 0; i < projected.Count; ++i)
+            {
+                float v = MathF.Max(cMinDistanceSq, projected[i].LengthSquared()) * penetration_depth_sq[i];
+                if (v > val)
+                {
+                    val = v;
+                    point1 = i;
+                }
+            }
+            var point1v = projected[point1];
+
+            // Find point furthest from the first point forming a line segment with point1. Again combine this with the heuristic
+            // for deepest point as per above.
+            int point2 = -1;
+            val = -float.MaxValue;
+            for (int i = 0; i < projected.Count; ++i)
+                if (i != point1)
+                {
+                    float v = MathF.Max(cMinDistanceSq, (projected[i] - point1v).LengthSquared()) * penetration_depth_sq[i];
+                    if (v > val)
+                    {
+                        val = v;
+                        point2 = i;
+                    }
+                }
+            Debug.Assert(point2 != -1);
+            var point2v = projected[point2];
+
+            // Find furthest points on both sides of the line segment in order to maximize the area
+            int point3 = -1;
+            int point4 = -1;
+            float min_val = 0.0f;
+            float max_val = 0.0f;
+            var perp = JVector.Cross((point2v - point1v), (inPenetrationAxis));
+            for (int i = 0; i < projected.Count; ++i)
+                if (i != point1 && i != point2)
+                {
+                    float v = JVector.Dot( perp, projected[i] - point1v);
+                    if (v < min_val)
+                    {
+                        min_val = v;
+                        point3 = i;
+                    }
+                    else if (v > max_val)
+                    {
+                        max_val = v;
+                        point4 = i;
+                    }
+                }
+
+            // Add points to array (in order so they form a polygon)
+            List<JVector> points_to_keep_on_1 = new List<JVector>();
+            List<JVector> points_to_keep_on_2 = new List<JVector>();
+            points_to_keep_on_1.Add(ioContactPointsOn1[point1]);
+            points_to_keep_on_2.Add(ioContactPointsOn2[point1]);
+            if (point3 != -1)
+            {
+                points_to_keep_on_1.Add(ioContactPointsOn1[point3]);
+                points_to_keep_on_2.Add(ioContactPointsOn2[point3]);
+            }
+            points_to_keep_on_1.Add(ioContactPointsOn1[point2]);
+            points_to_keep_on_2.Add(ioContactPointsOn2[point2]);
+            if (point4 != -1)
+            {
+                Debug.Assert(point3 != point4);
+                points_to_keep_on_1.Add(ioContactPointsOn1[point4]);
+                points_to_keep_on_2.Add(ioContactPointsOn2[point4]);
+            }
+
+            // Copy the points back to the input buffer
+            ioContactPointsOn1.Clear();
+            ioContactPointsOn2.Clear();
+
+            ioContactPointsOn1.AddRange(points_to_keep_on_1);
+            ioContactPointsOn2.AddRange(points_to_keep_on_2);
         }
 
         /// Determine contact points between 2 faces of 2 shapes and return them in outContactPoints 1 & 2

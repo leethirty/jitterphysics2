@@ -171,9 +171,10 @@ public partial class World
             // them all at once since this would mess with the warm starting
             // of the solver
             IntegrateForces(multiThread); // FAST SWEEP
-            Solve(multiThread, solverIterations); // FAST SWEEP
-            Integrate(multiThread); // FAST SWEEP
+            SolveVelocity(multiThread, solverIterations); // FAST SWEEP
+            IntegrateVelocity(multiThread); // FAST SWEEP
         }
+
 
         SetTime(Timings.SolveContacts);
 
@@ -183,13 +184,14 @@ public partial class World
         UpdateContacts(multiThread); // FAST SWEEP
         SetTime(Timings.UpdateContacts);
 
+        //Fixes up drift in positions
+        SolvePosition(solverPositionIterations);
+
         // substep_dt = +dt;
         // Integrate(multiThread);
         ForeachActiveBody(multiThread);
         ForeachActiveShape(multiThread);
         SetTime(Timings.UpdateBodies);
-
-        SolvePosition(solverPositionIterations);
 
         // Perform collision detection.
         // In the callback:
@@ -634,7 +636,9 @@ public partial class World
         {
             ref RigidBodyData rigidBody = ref span[i];
 
-            if (rigidBody.IsStatic) continue;
+            if (rigidBody.IsStatic) 
+                continue;
+
 
             JVector lvel = rigidBody.Velocity;
             JVector avel = rigidBody.AngularVelocity;
@@ -691,7 +695,7 @@ public partial class World
         }
     }
 
-    private void Solve(bool multiThread, int iterations)
+    private void SolveVelocity(bool multiThread, int iterations)
     {
         if (multiThread)
         {
@@ -754,7 +758,7 @@ public partial class World
         }
     }
 
-    private void Integrate(bool multiThread)
+    private void IntegrateVelocity(bool multiThread)
     {
         if (multiThread)
         {

@@ -140,9 +140,9 @@ public partial class Playground : RenderWindow
             ImGui.Checkbox("Allow Deactivation", ref ufes);
             World.AllowDeactivation = ufes;
 
-            ufes = World.EnableAuxiliaryContactPoints;
-            ImGui.Checkbox("Auxiliary Flat Surface", ref ufes);
-            World.EnableAuxiliaryContactPoints = ufes;
+            //ufes = World.EnableAuxiliaryContactPoints;
+            //ImGui.Checkbox("Auxiliary Flat Surface", ref ufes);
+            //World.EnableAuxiliaryContactPoints = ufes;
 
             ImGui.Checkbox("Multithreading", ref multiThread);
 

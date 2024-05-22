@@ -140,7 +140,9 @@ public class CylinderShape : Shape
             var transform = JMatrix.PreScaled(orientation, multiplier);
             foreach(var v in cTopFace)
             {
-                outVertices.Add(JVector.Transform(v, transform));
+                var temp = JVector.Transform(v, transform);
+                JVector.Add(temp, position, out temp);
+                outVertices.Add(temp);
             }
         }
     }
