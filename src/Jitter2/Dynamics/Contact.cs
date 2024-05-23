@@ -697,7 +697,15 @@ public struct ContactData
                     b1.Position -= lambda * b1.InverseMass * Normal;
 
                     //ioBody1.SubRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI1_R1PlusUxAxis));
-                    b1.AngularVelocity -= lambda * M_n1;
+                    var deltaAngle = lambda * M_n1;
+                    var deltaAngleLenght = deltaAngle.Length();
+                    if (deltaAngleLenght > 0.000001)
+                    {
+                        var curRotation = JQuaternion.CreateFromMatrix(b1.Orientation);
+                        curRotation = JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * curRotation;
+                        curRotation.Normalize();
+                        b1.Orientation = JMatrix.CreateFromQuaternion(curRotation);
+                    }
                 }
 
                 if (!b2.IsStaticOrInactive)
@@ -705,7 +713,16 @@ public struct ContactData
                     b2.Position += lambda * b2.InverseMass * Normal;
 
                     //ioBody2.AddRotationStep(lambda * Vec3::sLoadFloat3Unsafe(mInvI2_R2xAxis));
-                    b2.AngularVelocity += lambda * M_n2;
+                    var deltaAngle = lambda * M_n2;
+                    var deltaAngleLenght = deltaAngle.Length();
+                    if (deltaAngleLenght > 0.000001)
+                    {
+                        var curRotation = JQuaternion.CreateFromMatrix(b2.Orientation);
+                        curRotation = JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * curRotation;
+                        curRotation.Normalize();
+                        b2.Orientation = JMatrix.CreateFromQuaternion(curRotation);
+                    }
+
                 }
             }
         }

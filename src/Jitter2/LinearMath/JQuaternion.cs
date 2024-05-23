@@ -22,6 +22,7 @@
  */
 
 using System;
+using System.Numerics;
 
 namespace Jitter2.LinearMath;
 
@@ -36,6 +37,7 @@ public struct JQuaternion
     public float Z;
 
     public static JQuaternion Identity => new(0, 0, 0, 1);
+    public static readonly float Deg2Rad = MathF.PI / 180f;
 
     public JQuaternion(float x, float y, float z, float w)
     {
@@ -201,6 +203,24 @@ public struct JQuaternion
         result.Y *= t;
         result.Z *= t;
         result.W *= t;
+    }
+
+    public static JQuaternion AngleAxis(float angle, JVector axis)
+    {
+        axis = axis * Deg2Rad;
+        axis.Normalize();
+
+        var halfAngle = angle * Deg2Rad * 0.5f;
+
+        JQuaternion rotation;
+        float sin = MathF.Sin(halfAngle);
+
+        rotation.X = axis.X * sin;
+        rotation.Y = axis.Y * sin;
+        rotation.Z = axis.Z * sin;
+        rotation.W = MathF.Cos(halfAngle);
+
+        return rotation;
     }
 
     public static JQuaternion operator *(in JQuaternion value1, in JQuaternion value2)

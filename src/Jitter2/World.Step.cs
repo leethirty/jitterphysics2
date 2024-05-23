@@ -175,6 +175,8 @@ public partial class World
             IntegrateVelocity(multiThread); // FAST SWEEP
         }
 
+        //Fixes up drift in positions
+        SolvePosition(solverPositionIterations);
 
         SetTime(Timings.SolveContacts);
 
@@ -183,9 +185,6 @@ public partial class World
 
         UpdateContacts(multiThread); // FAST SWEEP
         SetTime(Timings.UpdateContacts);
-
-        //Fixes up drift in positions
-        SolvePosition(solverPositionIterations);
 
         // substep_dt = +dt;
         // Integrate(multiThread);
