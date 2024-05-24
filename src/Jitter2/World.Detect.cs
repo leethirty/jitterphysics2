@@ -220,8 +220,7 @@ public partial class World
             memContacts.ResizeLock.EnterReadLock();
 
             arbiter.Handle.Data.IsSpeculative = false;
-
-            for(int e = 0; e < outContactPoints1.Count; e++ )
+            for (int e = 0; e < outContactPoints1.Count; e++ )
             {
                 JVector mfA = outContactPoints1[e];
                 JVector mfB = outContactPoints2[e];

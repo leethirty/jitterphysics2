@@ -702,7 +702,7 @@ public struct ContactData
                     if (deltaAngleLenght > 0.000001)
                     {
                         var curRotation = JQuaternion.CreateFromMatrix(b1.Orientation);
-                        curRotation = JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * curRotation;
+                        curRotation = curRotation * JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
                         curRotation.Normalize();
                         b1.Orientation = JMatrix.CreateFromQuaternion(curRotation);
                     }
@@ -718,7 +718,7 @@ public struct ContactData
                     if (deltaAngleLenght > 0.000001)
                     {
                         var curRotation = JQuaternion.CreateFromMatrix(b2.Orientation);
-                        curRotation = JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * curRotation;
+                        curRotation = curRotation * JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
                         curRotation.Normalize();
                         b2.Orientation = JMatrix.CreateFromQuaternion(curRotation);
                     }
