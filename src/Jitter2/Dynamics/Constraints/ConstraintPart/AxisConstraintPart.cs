@@ -166,7 +166,7 @@ namespace Jitter2.Dynamics
             // Lagrange multiplier is:
             //
             // lambda = -K^-1 (J v + b)
-            float lambda = EffectiveMass * (jv);
+            float lambda = EffectiveMass * jv;
 
             // Return the total accumulated lambda
             return AccImpulse + lambda;

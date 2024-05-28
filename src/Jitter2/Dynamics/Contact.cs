@@ -74,10 +74,10 @@ public struct ContactData
     public void SolveVelocityConstraints()
     {
         // First apply all friction constraints (non-penetration is more important than friction)
-        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS, Friction);
+        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS, Friction);
+        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS, Friction);
+        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS, Friction);
 
         // Then apply all non-penetration constraints
         if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
@@ -196,31 +196,33 @@ public struct ContactData
 
             JVector.Subtract(newPoint1, b1Position, out var newWorldRelPoint1);
             JVector.Subtract(newPoint2, b2Position, out var newWorldRelPoint2);
+            JVector.TransposedTransform(newWorldRelPoint1, Body1.Data.Orientation, out var newLocalRelPos1);
+            JVector.TransposedTransform(newWorldRelPoint2, Body2.Data.Orientation, out var newLocalRelPos2);
 
             if (UsageMask == 0b1111)
             {
                 ref var cref = ref Contact0;
                 int index = -1;
-                if ((newWorldRelPoint1 - Contact0.WorldRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
-                    && (newWorldRelPoint2 - Contact0.WorldRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
+                if ((newLocalRelPos1 - Contact0.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                    && (newLocalRelPos2 - Contact0.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact0;
                     index = 0;
                 }
-                if ((newWorldRelPoint1 - Contact1.WorldRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
-                    && (newWorldRelPoint2 - Contact1.WorldRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
+                if ((newLocalRelPos1 - Contact1.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                    && (newLocalRelPos2 - Contact1.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact1;
                     index = 1;
                 }
-                if ((newWorldRelPoint1 - Contact2.WorldRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
-                    && (newWorldRelPoint2 - Contact2.WorldRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
+                if ((newLocalRelPos1 - Contact2.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                    && (newLocalRelPos2 - Contact2.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact2;
                     index = 2;
                 }
-                if ((newWorldRelPoint1 - Contact3.WorldRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
-                && (newWorldRelPoint2 - Contact3.WorldRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
+                if ((newLocalRelPos1 - Contact3.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                && (newLocalRelPos2 - Contact3.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact3;
                     index = 3;
@@ -261,6 +263,7 @@ public struct ContactData
                     Friction, stepTime);
                 UsageMask |= 1 << 3;
             }
+
         }
     }
 
@@ -271,20 +274,6 @@ public struct ContactData
         public const float BiasFactor = 0.0f;
         public const float AllowedPenetration = 0.01f;
         public const float BreakThreshold = 0.02f;
-
-        [Flags]
-        public enum Flags
-        {
-            NewContact = 1 << 1,
-            Body1Static = 1 << 2,
-            Body2Static = 1 << 3
-        }
-
-        public Flags Flag;
-
-        public float Friction;
-        public float Penetration;
-        public float RestitutionBias;
 
         internal JVector LocalRelPos1;
         internal JVector LocalRelPos2;
@@ -300,6 +289,32 @@ public struct ContactData
         public void Initialize(ref RigidBodyData b1, ref RigidBodyData b2, in JVector point1, in JVector point2, in JVector n,
             bool newContact, float combinedRestitution, float combinedFriction, float stepTime)
         {
+            if (newContact)
+            {
+                NonPenetrationConstraint = new AxisConstraintPart();
+                FrictionConstraint1 = new AxisConstraintPart();
+                FrictionConstraint2 = new AxisConstraintPart();
+            }
+            else
+            {
+                var accImpulse = NonPenetrationConstraint.AccImpulse;
+                NonPenetrationConstraint = new AxisConstraintPart();
+                NonPenetrationConstraint.AccImpulse = accImpulse;
+
+                accImpulse = FrictionConstraint1.AccImpulse;
+                FrictionConstraint1 = new AxisConstraintPart();
+                FrictionConstraint1.AccImpulse = accImpulse;
+
+                accImpulse = FrictionConstraint2.AccImpulse;
+                FrictionConstraint2 = new AxisConstraintPart();
+                FrictionConstraint2.AccImpulse = accImpulse;
+            }
+
+            JVector.Subtract(point1, b1.Position, out WorldRelPos1);
+            JVector.Subtract(point2, b2.Position, out WorldRelPos2);
+            JVector.TransposedTransform(WorldRelPos1, b1.Orientation, out LocalRelPos1);
+            JVector.TransposedTransform(WorldRelPos2, b2.Orientation, out LocalRelPos2);
+
             // Calculate collision points relative to body
             var p = 0.5f * (point1 + point2);
             var r1 = p - b1.Position;
@@ -309,7 +324,7 @@ public struct ContactData
             JVector relativeVelocity = JVector.Zero;
             if (b1.MotionType != BodyMotionType.Static && b2.MotionType != BodyMotionType.Static)
             {
-                relativeVelocity = b1.Velocity + b1.AngularVelocity % r1 - b2.Velocity + b2.AngularVelocity % r2;
+                relativeVelocity = b2.Velocity + b2.AngularVelocity % r2 - b1.Velocity + b1.AngularVelocity % r1;
             }
             else if (b1.MotionType != BodyMotionType.Static)
             {
@@ -322,13 +337,13 @@ public struct ContactData
             float normalVelocity = JVector.Dot(relativeVelocity, n);
 
             // How much the shapes are penetrating (> 0 if penetrating, < 0 if separated)
-            Penetration = JVector.Dot(point1 - point2, n);
+            float penetration = JVector.Dot(point1 - point2, n);
 
             // If there is no penetration, this is a speculative contact and we will apply a bias to the contact constraint
             // so that the constraint becomes relative_velocity . contact normal > -penetration / delta_time
             // instead of relative_velocity . contact normal > 0
             // See: GDC 2013: "Physics for Game Programmers; Continuous Collision" - Erin Catto
-            float speculativeContactVelocityBias = MathF.Max(0.0f, -Penetration / stepTime);
+            float speculativeContactVelocityBias = MathF.Max(0.0f, -penetration / stepTime);
 
             // Determine if the velocity is big enough for restitution
             float normalVelocityBias = 0;
@@ -389,14 +404,14 @@ public struct ContactData
 
             JVector.Subtract(p1, p2, out JVector dist);
 
-            Penetration = JVector.Dot(dist, normalWS);
+            var penetration = JVector.Dot(dist, normalWS);
 
-            if (Penetration < -BreakThreshold * 0.1f)
+            if (penetration < -BreakThreshold * 0.1f)
             {
                 return false;
             }
 
-            dist -= Penetration * normalWS;
+            dist -= penetration * normalWS;
             float tangentialOffsetSq = dist.LengthSquared();
 
             if (tangentialOffsetSq > BreakThreshold * BreakThreshold)
@@ -422,7 +437,7 @@ public struct ContactData
             NonPenetrationConstraint.WarmStart(ref b1, ref b2, normal, 1);
         }
 
-        public bool SolveVelocityFrictionConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normal)
+        public bool SolveVelocityFrictionConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normal, float friction)
         {
             bool any_impulse_applied = false;
 
@@ -441,7 +456,7 @@ public struct ContactData
                 // Calculate max impulse that can be applied. Note that we're using the non-penetration impulse from the previous iteration here.
                 // We do this because non-penetration is more important so is solved last (the last things that are solved in an iterative solver
                 // contribute the most).
-                float max_lambda_f = Friction * NonPenetrationConstraint.AccImpulse;
+                float max_lambda_f = friction * NonPenetrationConstraint.AccImpulse;
 
                 // If the total lambda that we will apply is too large, scale it back
                 if (total_lambda_sq > max_lambda_f * max_lambda_f)

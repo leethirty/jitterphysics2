@@ -279,17 +279,6 @@ public partial class World
 
             if (!rigidBody.IsStatic && rigidBody.IsActive)
             {
-                rigidBody.AngularVelocity *= body.angularDampingMultiplier;
-                rigidBody.Velocity *= body.linearDampingMultiplier;
-
-                rigidBody.DeltaVelocity = body.Force * rigidBody.InverseMass * substep_dt;
-                rigidBody.DeltaAngularVelocity = JVector.Transform(body.Torque, rigidBody.InverseInertiaWorld) * substep_dt;
-
-                if (body.AffectedByGravity)
-                {
-                    rigidBody.DeltaVelocity += gravity * substep_dt;
-                }
-
                 body.Force = JVector.Zero;
                 body.Torque = JVector.Zero;
 
@@ -620,10 +609,21 @@ public partial class World
         for (int i = 0; i < span.Length; i++)
         {
             ref RigidBodyData rigidBody = ref span[i];
-            if (rigidBody.IsStaticOrInactive) continue;
+            var body = bodies[i];
 
-            rigidBody.AngularVelocity += rigidBody.DeltaAngularVelocity;
-            rigidBody.Velocity += rigidBody.DeltaVelocity;
+            if (rigidBody.IsStaticOrInactive) 
+                continue;
+
+            rigidBody.Velocity += body.Force * rigidBody.InverseMass * substep_dt;
+            rigidBody.AngularVelocity += JVector.Transform(body.Torque, rigidBody.InverseInertiaWorld) * substep_dt;
+
+            if (body.AffectedByGravity)
+            {
+                rigidBody.Velocity += gravity * substep_dt;
+            }
+
+            rigidBody.AngularVelocity *= body.angularDampingMultiplier;
+            rigidBody.Velocity *= body.linearDampingMultiplier;
         }
     }
 

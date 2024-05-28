@@ -61,9 +61,6 @@ public struct RigidBodyData
     public JVector Velocity;
     public JVector AngularVelocity;
 
-    public JVector DeltaVelocity;
-    public JVector DeltaAngularVelocity;
-
     public JMatrix Orientation;
     public JMatrix InverseInertiaWorld;
 
@@ -134,8 +131,8 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
     internal float inactiveThresholdAngularSq = 0.1f;
     internal float deactivationTimeThreshold = 1.0f;
 
-    internal float linearDampingMultiplier = 0.995f;
-    internal float angularDampingMultiplier = 0.995f;
+    internal float linearDampingMultiplier = 0.9975f;
+    internal float angularDampingMultiplier = 0.9975f;
 
     internal JMatrix inverseInertia = JMatrix.Identity;
     internal float inverseMass = 1.0f;
