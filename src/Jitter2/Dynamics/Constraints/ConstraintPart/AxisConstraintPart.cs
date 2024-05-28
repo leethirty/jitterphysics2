@@ -70,7 +70,7 @@ namespace Jitter2.Dynamics
 
             // Calculate inverse effective mass: K = J M^-1 J^T
             float inv_effective_mass = 0;
-            if (b1.MotionType == BodyMotionType.Static)
+            if (b1.MotionType == BodyMotionType.Dynamic)
             {
                 JVector.Transform(RelP1CroAxis, b1.InverseInertiaWorld, out RelP1CroAxisInvI);
                 inv_effective_mass = b1.InverseMass + JVector.Dot(RelP1CroAxisInvI, RelP1CroAxis);
@@ -81,7 +81,7 @@ namespace Jitter2.Dynamics
                 inv_effective_mass = 0.0f;
             }
 
-            if (b2.MotionType == BodyMotionType.Static)
+            if (b2.MotionType == BodyMotionType.Dynamic)
             {
                 JVector.Transform(RelP2CroAxis, b2.InverseInertiaWorld, out RelP2CroAxisInvI);
                 inv_effective_mass = b2.InverseMass + JVector.Dot(RelP2CroAxisInvI, RelP2CroAxis);

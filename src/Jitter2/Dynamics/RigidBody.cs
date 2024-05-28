@@ -158,6 +158,7 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
     internal RigidBody(JHandle<RigidBodyData> handle, World world)
     {
         this.handle = handle;
+        Data.MotionType = BodyMotionType.Dynamic;
         World = world;
 
         Shapes = new ReadOnlyList<Shape>(shapes);

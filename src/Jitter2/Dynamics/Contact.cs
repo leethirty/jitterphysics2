@@ -65,25 +65,25 @@ public struct ContactData
 
     public void WarmStartVelocityConstraints(float dt)
     {
-        if ((UsageMask & 0b0001) != 0) Contact0.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, dt, IsSpeculative);
-        if ((UsageMask & 0b0010) != 0) Contact1.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, dt, IsSpeculative);
-        if ((UsageMask & 0b0100) != 0) Contact2.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, dt, IsSpeculative);
-        if ((UsageMask & 0b1000) != 0) Contact3.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, dt, IsSpeculative);
+        if ((UsageMask & 0b0001) != 0) Contact0.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, NormalWS, dt, IsSpeculative);
+        if ((UsageMask & 0b0010) != 0) Contact1.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, NormalWS, dt, IsSpeculative);
+        if ((UsageMask & 0b0100) != 0) Contact2.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, NormalWS, dt, IsSpeculative);
+        if ((UsageMask & 0b1000) != 0) Contact3.WarmStartVelocityConstraints(ref Body1.Data, ref Body2.Data, NormalWS, dt, IsSpeculative);
     }
 
     public void SolveVelocityConstraints()
     {
         // First apply all friction constraints (non-penetration is more important than friction)
-        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data);
+        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityFrictionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
 
         // Then apply all non-penetration constraints
-        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data);
-        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data);
+        if ((UsageMask & 0b0001) != 0) Contact0.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b0010) != 0) Contact1.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b0100) != 0) Contact2.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        if ((UsageMask & 0b1000) != 0) Contact3.SolveVelocityNonPenetrationConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
     }
 
     public void SolvePositionConstraints()
@@ -99,7 +99,7 @@ public struct ContactData
         int delc = 0;
         if ((UsageMask & 0b0001) != 0)
         {
-            if (!Contact0.UpdatePosition(ref Body1.Data, ref Body2.Data))
+            if (!Contact0.UpdatePosition(ref Body1.Data, ref Body2.Data, NormalWS))
             {
                 delc++;
                 UsageMask &= ~(1 << 0);
@@ -108,7 +108,7 @@ public struct ContactData
 
         if ((UsageMask & 0b0010) != 0)
         {
-            if (!Contact1.UpdatePosition(ref Body1.Data, ref Body2.Data))
+            if (!Contact1.UpdatePosition(ref Body1.Data, ref Body2.Data , NormalWS))
             {
                 delc++;
                 UsageMask &= ~(1 << 1);
@@ -117,7 +117,7 @@ public struct ContactData
 
         if ((UsageMask & 0b0100) != 0)
         {
-            if (!Contact2.UpdatePosition(ref Body1.Data, ref Body2.Data))
+            if (!Contact2.UpdatePosition(ref Body1.Data, ref Body2.Data, NormalWS))
             {
                 delc++;
                 UsageMask &= ~(1 << 2);
@@ -126,7 +126,7 @@ public struct ContactData
 
         if ((UsageMask & 0b1000) != 0)
         {
-            if (!Contact3.UpdatePosition(ref Body1.Data, ref Body2.Data))
+            if (!Contact3.UpdatePosition(ref Body1.Data, ref Body2.Data, NormalWS))
             {
                 delc++;
                 UsageMask &= ~(1 << 3);
@@ -282,32 +282,9 @@ public struct ContactData
 
         public Flags Flag;
 
-        public float Bias;
-        public float MassNormal;
-
-        public float AccumulatedTangentImpulse1;
-        public float AccumulatedTangentImpulse2;
-        public float AccumulatedNormalImpulse;
-
-        public float MassTangent1;
-        public float MassTangent2;
-        public float MaxTangentImpulse;
-
         public float Friction;
         public float Penetration;
         public float RestitutionBias;
-
-        internal JVector Normal;
-        internal JVector Tangent1;
-        internal JVector Tangent2;
-
-        private JVector M_n1;
-        private JVector M_t1;
-        private JVector M_tt1;
-
-        private JVector M_n2;
-        private JVector M_t2;
-        private JVector M_tt2;
 
         internal JVector LocalRelPos1;
         internal JVector LocalRelPos2;
@@ -328,8 +305,6 @@ public struct ContactData
             var r1 = p - b1.Position;
             var r2 = p - b2.Position;
 
-            Normal = n;
-
             // Calculate velocity of collision points
             JVector relativeVelocity = JVector.Zero;
             if (b1.MotionType != BodyMotionType.Static && b2.MotionType != BodyMotionType.Static)
@@ -344,10 +319,10 @@ public struct ContactData
             {
                 relativeVelocity = b2.Velocity + b2.AngularVelocity % r2;
             }
-            float normalVelocity = JVector.Dot(relativeVelocity, Normal);
+            float normalVelocity = JVector.Dot(relativeVelocity, n);
 
             // How much the shapes are penetrating (> 0 if penetrating, < 0 if separated)
-            Penetration = JVector.Dot(point1 - point2, Normal);
+            Penetration = JVector.Dot(point1 - point2, n);
 
             // If there is no penetration, this is a speculative contact and we will apply a bias to the contact constraint
             // so that the constraint becomes relative_velocity . contact normal > -penetration / delta_time
@@ -382,7 +357,7 @@ public struct ContactData
             NonPenetrationConstraint.CalculateConstraintProperties(ref b1, ref b2, r1, r2, n, normalVelocityBias);
 
             var tangent1 = MathHelper.CreateOrthonormal(n);
-            var tangent2 = Tangent1 % n;
+            var tangent2 = tangent1 % n;
 
             // Calculate friction part
             if (combinedFriction > 0.0f)
@@ -404,7 +379,7 @@ public struct ContactData
             }
         }
 
-        public bool UpdatePosition(ref RigidBodyData b1, ref RigidBodyData b2)
+        public bool UpdatePosition(ref RigidBodyData b1, ref RigidBodyData b2, JVector normalWS)
         {
             JVector.Transform(LocalRelPos1, b1.Orientation, out WorldRelPos1);
             JVector.Add(WorldRelPos1, b1.Position, out JVector p1);
@@ -414,14 +389,14 @@ public struct ContactData
 
             JVector.Subtract(p1, p2, out JVector dist);
 
-            Penetration = JVector.Dot(dist, Normal);
+            Penetration = JVector.Dot(dist, normalWS);
 
             if (Penetration < -BreakThreshold * 0.1f)
             {
                 return false;
             }
 
-            dist -= Penetration * Normal;
+            dist -= Penetration * normalWS;
             float tangentialOffsetSq = dist.LengthSquared();
 
             if (tangentialOffsetSq > BreakThreshold * BreakThreshold)
@@ -432,11 +407,11 @@ public struct ContactData
             return true;
         }
 
-        public void WarmStartVelocityConstraints(ref RigidBodyData b1, ref RigidBodyData b2,
+        public void WarmStartVelocityConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normal,
             float idt, bool speculative = false)
         {
-            var tangent1 = MathHelper.CreateOrthonormal(Normal);
-            var tangent2 = Tangent1 % Normal;
+            var tangent1 = MathHelper.CreateOrthonormal(normal);
+            var tangent2 = tangent1 % normal;
 
             // Warm starting: Apply impulse from last frame
             if (FrictionConstraint1.IsActive() || FrictionConstraint2.IsActive())
@@ -444,15 +419,15 @@ public struct ContactData
                 FrictionConstraint1.WarmStart(ref b1, ref b2, tangent1, 1);
                 FrictionConstraint2.WarmStart(ref b1, ref b2, tangent2, 1);
             }
-            NonPenetrationConstraint.WarmStart(ref b1, ref b2, Normal, 1);
+            NonPenetrationConstraint.WarmStart(ref b1, ref b2, normal, 1);
         }
 
-        public bool SolveVelocityFrictionConstraints(ref RigidBodyData b1, ref RigidBodyData b2)
+        public bool SolveVelocityFrictionConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normal)
         {
             bool any_impulse_applied = false;
 
-            var tangent1 = MathHelper.CreateOrthonormal(Normal);
-            var tangent2 = Tangent1 % Normal;
+            var tangent1 = MathHelper.CreateOrthonormal(normal);
+            var tangent2 = tangent1 % normal;
 
             // First apply all friction constraints (non-penetration is more important than friction)
             // Check if friction is enabled
@@ -490,10 +465,10 @@ public struct ContactData
             return any_impulse_applied;
         }
 
-        public bool SolveVelocityNonPenetrationConstraints(ref RigidBodyData b1, ref RigidBodyData b2)
+        public bool SolveVelocityNonPenetrationConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normal)
         {
             // Solve non penetration velocities
-            return NonPenetrationConstraint.SolveVelocityConstraint(ref b1, ref b2, Normal, 0.0f, float.MaxValue);
+            return NonPenetrationConstraint.SolveVelocityConstraint(ref b1, ref b2, normal, 0.0f, float.MaxValue);
         }
 
         /// How much bodies are allowed to sink into each other (unit: meters)
