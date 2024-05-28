@@ -33,6 +33,24 @@ using Jitter2.UnmanagedMemory;
 
 namespace Jitter2.Dynamics;
 
+public enum BodyMotionType : byte
+{
+    /// <summary>
+    ///  Non movable
+    /// </summary>
+    Static,
+
+    /// <summary>
+    /// Movable, does not respond to forces
+    /// </summary>
+    Kinematic,
+
+    /// <summary>
+    /// Responds to forces as a normal physics object
+    /// </summary>
+    Dynamic,
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public struct RigidBodyData
 {
@@ -52,6 +70,7 @@ public struct RigidBodyData
     public float InverseMass;
     public bool IsActive;
     public bool IsStatic;
+    public BodyMotionType MotionType;
 
     public readonly bool IsStaticOrInactive => !IsActive || IsStatic;
 }
@@ -306,6 +325,7 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
             }
 
             Data.IsStatic = value;
+            Data.MotionType = value ? BodyMotionType.Static : BodyMotionType.Dynamic;
             UpdateWorldInertia();
 
             if (value) World.DeactivateBodyNextStep(this);

@@ -174,17 +174,18 @@ public static class MathHelper
         float ya = Math.Abs(vec.Y);
         float za = Math.Abs(vec.Z);
 
-        if ((xa > ya && xa > za) || (ya > xa && ya > za))
+        //if ((xa > ya && xa > za) || (ya > xa && ya > za))
+        if (xa > ya)
         {
-            result.X = vec.Y;
-            result.Y = -vec.X;
-            result.Z = 0;
+            result.X = vec.Z;
+            result.Y = 0;
+            result.Z = -vec.X;
         }
         else
         {
+            result.X = 0;
             result.Y = vec.Z;
             result.Z = -vec.Y;
-            result.X = 0;
         }
 
         result.Normalize();

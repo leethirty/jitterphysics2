@@ -25,7 +25,7 @@ public partial class Playground : RenderWindow
 {
     private readonly World world;
 
-    private bool multiThread;
+    private bool multiThread = false;
     private bool persistentThreadModel = true;
     private Shape? floorShape;
 
@@ -227,10 +227,10 @@ public partial class Playground : RenderWindow
             grepping = false;
         }
 
-        if (Keyboard.KeyPressBegin(Keyboard.Key.M))
+/*        if (Keyboard.KeyPressBegin(Keyboard.Key.M))
         {
             multiThread = !multiThread;
-        }
+        }*/
 
         if (!GuiRenderer.WantsCaptureKeyboard && Keyboard.KeyPressBegin(Keyboard.Key.Space))
         {

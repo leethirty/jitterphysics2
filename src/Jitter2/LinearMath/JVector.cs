@@ -47,6 +47,7 @@ public struct JVector
     public static readonly JVector One;
     public static readonly JVector MinValue;
     public static readonly JVector MaxValue;
+    public static readonly JVector NaN;
 
     static JVector()
     {
@@ -57,6 +58,7 @@ public struct JVector
         UnitZ = new JVector(0, 0, 1);
         MinValue = new JVector(float.MinValue);
         MaxValue = new JVector(float.MaxValue);
+        NaN = new JVector(float.NaN);
         Arbitrary = new JVector(1, 1, 1);
         InternalZero = Zero;
     }

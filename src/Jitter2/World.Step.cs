@@ -101,7 +101,7 @@ public partial class World
     /// </summary>
     /// <param name="dt">The duration of time to simulate. This should remain fixed and not exceed 1/60 of a second.</param>
     /// <param name="multiThread">Indicates whether multithreading should be utilized. The behavior of the engine can be modified using <see cref="Parallelization.ThreadPool.Instance"/>.</param>
-    public void Step(float dt, bool multiThread = true)
+    public void Step(float dt, bool multiThread = false)
     {
         AssertNullBody();
 
@@ -322,7 +322,7 @@ public partial class World
             // move with 'bias' velocity along their normal after solving.
             // Since collision detection is happening at a rate of step_dt
             // and not substep_dt the penetration magnitude can be large.
-            c.PrepareForIteration(istep_dt);
+            c.WarmStartVelocityConstraints(istep_dt);
             UnlockTwoBody(ref b1, ref b2);
         }
     }
@@ -428,7 +428,7 @@ public partial class World
             AssertConstraint(ref b1, ref b2);
 
             LockTwoBody(ref b1, ref b2);
-            c.Iterate();
+            c.SolveVelocityConstraints();
             UnlockTwoBody(ref b1, ref b2);
         }
     }
@@ -688,7 +688,7 @@ public partial class World
                 AssertConstraint(ref b1, ref b2);
 
                 LockTwoBody(ref b1, ref b2);
-                c.IteratePosition();
+                c.SolvePositionConstraints();
                 UnlockTwoBody(ref b1, ref b2);
             }
         }
