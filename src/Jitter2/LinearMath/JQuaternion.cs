@@ -172,6 +172,50 @@ public struct JQuaternion
         return new JQuaternion(0, 0, sha, cha);
     }
 
+    /// <summary>
+    /// Calculates quaternion1^\mathrm{*} \times quaternion2.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ConjugateMultiply(in JQuaternion quaternion1, in JQuaternion quaternion2, out JQuaternion result)
+    {
+        float r1 = quaternion1.W;
+        float i1 = -quaternion1.X;
+        float j1 = -quaternion1.Y;
+        float k1 = -quaternion1.Z;
+
+        float r2 = quaternion2.W;
+        float i2 = quaternion2.X;
+        float j2 = quaternion2.Y;
+        float k2 = quaternion2.Z;
+
+        result.W = r1 * r2 - (i1 * i2 + j1 * j2 + k1 * k2);
+        result.X = r1 * i2 + r2 * i1 + j1 * k2 - k1 * j2;
+        result.Y = r1 * j2 + r2 * j1 + k1 * i2 - i1 * k2;
+        result.Z = r1 * k2 + r2 * k1 + i1 * j2 - j1 * i2;
+    }
+
+    /// <summary>
+    /// Calculates quaternion1 \times quaternion2^\mathrm{*}.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void MultiplyConjugate(in JQuaternion quaternion1, in JQuaternion quaternion2, out JQuaternion result)
+    {
+        float r1 = quaternion1.W;
+        float i1 = quaternion1.X;
+        float j1 = quaternion1.Y;
+        float k1 = quaternion1.Z;
+
+        float r2 = quaternion2.W;
+        float i2 = -quaternion2.X;
+        float j2 = -quaternion2.Y;
+        float k2 = -quaternion2.Z;
+
+        result.W = r1 * r2 - (i1 * i2 + j1 * j2 + k1 * k2);
+        result.X = r1 * i2 + r2 * i1 + j1 * k2 - k1 * j2;
+        result.Y = r1 * j2 + r2 * j1 + k1 * i2 - i1 * k2;
+        result.Z = r1 * k2 + r2 * k1 + i1 * j2 - j1 * i2;
+    }
+
     public static JQuaternion Multiply(in JQuaternion quaternion1, in JQuaternion quaternion2)
     {
         Multiply(quaternion1, quaternion2, out JQuaternion result);
