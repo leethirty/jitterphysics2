@@ -23,6 +23,7 @@
 
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Jitter2.LinearMath;
 
@@ -31,10 +32,10 @@ namespace Jitter2.LinearMath;
 /// </summary>
 public struct JQuaternion
 {
-    public float W;
     public float X;
     public float Y;
     public float Z;
+    public float W;
 
     public static JQuaternion Identity => new(0, 0, 0, 1);
     public static readonly float Deg2Rad = MathF.PI / 180f;
@@ -106,6 +107,69 @@ public struct JQuaternion
         result.Y = quaternion1.Y - quaternion2.Y;
         result.Z = quaternion1.Z - quaternion2.Z;
         result.W = quaternion1.W - quaternion2.W;
+    }
+
+    /// <summary>
+    /// Calculates the transformation of (1,0,0)^\mathrm{T} by the quaternion.
+    /// </summary>
+    public readonly JVector GetBasisX()
+    {
+        Unsafe.SkipInit(out JVector result);
+
+        result.X = 1.0f - 2.0f * (Y * Y + Z * Z);
+        result.Y = 2.0f * (X * Y + Z * W);
+        result.Z = 2.0f * (X * Z - Y * W);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Calculates the transformation of (0,1,0)^\mathrm{T} by the quaternion.
+    /// </summary>
+    public readonly JVector GetBasisY()
+    {
+        Unsafe.SkipInit(out JVector result);
+
+        result.X = 2.0f * (X * Y - Z * W);
+        result.Y = 1.0f - 2.0f * (X * X + Z * Z);
+        result.Z = 2.0f * (Y * Z + X * W);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Calculates the transformation of (0,0,1)^\mathrm{T} by the quaternion.
+    /// </summary>
+    public readonly JVector GetBasisZ()
+    {
+        Unsafe.SkipInit(out JVector result);
+
+        result.X = 2.0f * (X * Z + Y * W);
+        result.Y = 2.0f * (Y * Z - X * W);
+        result.Z = 1.0f - 2.0f * (X * X + Y * Y);
+
+        return result;
+    }
+
+    public static JQuaternion CreateRotationX(float radians)
+    {
+        float halfAngle = radians * 0.5f;
+        (float sha, float cha) = MathF.SinCos(halfAngle);
+        return new JQuaternion(sha, 0, 0, cha);
+    }
+
+    public static JQuaternion CreateRotationY(float radians)
+    {
+        float halfAngle = radians * 0.5f;
+        (float sha, float cha) = MathF.SinCos(halfAngle);
+        return new JQuaternion(0, sha, 0, cha);
+    }
+
+    public static JQuaternion CreateRotationZ(float radians)
+    {
+        float halfAngle = radians * 0.5f;
+        (float sha, float cha) = MathF.SinCos(halfAngle);
+        return new JQuaternion(0, 0, sha, cha);
     }
 
     public static JQuaternion Multiply(in JQuaternion quaternion1, in JQuaternion quaternion2)

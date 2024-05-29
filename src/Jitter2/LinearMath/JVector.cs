@@ -199,6 +199,20 @@ public struct JVector
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JVector Transform(in JVector vector, in JQuaternion quat)
+    {
+        Transform(vector, quat, out JVector result);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JVector TransposedTransform(in JVector vector, in JQuaternion quat)
+    {
+        ConjugatedTransform(vector, quat, out JVector result);
+        return result;
+    }
+
     /// <summary>
     /// Calculates matrix^\mathrf{T} \times vector, where vector is a column vector.
     /// </summary>
@@ -236,6 +250,54 @@ public struct JVector
         result.X = num0;
         result.Y = num1;
         result.Z = num2;
+    }
+
+    /// <summary>
+    /// Transforms the vector by a quaternion.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Transform(in JVector vector, in JQuaternion quaternion, out JVector result)
+    {
+        float x = vector.X;
+        float y = vector.Y;
+        float z = vector.Z;
+        float qx = quaternion.X;
+        float qy = quaternion.Y;
+        float qz = quaternion.Z;
+        float qw = quaternion.W;
+
+        float num0 = qw * x + qy * z - qz * y;
+        float num1 = qw * y + qz * x - qx * z;
+        float num2 = qw * z + qx * y - qy * x;
+        float num3 = -qx * x - qy * y - qz * z;
+
+        result.X = num0 * qw - num3 * qx - num1 * qz + num2 * qy;
+        result.Y = num1 * qw - num3 * qy - num2 * qx + num0 * qz;
+        result.Z = num2 * qw - num3 * qz - num0 * qy + num1 * qx;
+    }
+
+    /// <summary>
+    /// Transforms the vector by a conjugated quaternion.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ConjugatedTransform(in JVector vector, in JQuaternion quaternion, out JVector result)
+    {
+        float x = vector.X;
+        float y = vector.Y;
+        float z = vector.Z;
+        float qx = quaternion.X;
+        float qy = quaternion.Y;
+        float qz = quaternion.Z;
+        float qw = quaternion.W;
+
+        float num0 = qw * x - qy * z + qz * y;
+        float num1 = qw * y - qz * x + qx * z;
+        float num2 = qw * z - qx * y + qy * x;
+        float num3 = qx * x + qy * y + qz * z;
+
+        result.X = num0 * qw + num3 * qx + num1 * qz - num2 * qy;
+        result.Y = num1 * qw + num3 * qy + num2 * qx - num0 * qz;
+        result.Z = num2 * qw + num3 * qz + num0 * qy - num1 * qx;
     }
 
     /// <summary>
