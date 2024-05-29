@@ -137,10 +137,10 @@ public partial class World
 
         PreStep?.Invoke(dt);
 
+        IntegrateForces(multiThread); // FAST SWEEP
         SetTime(Timings.Integrate);
 
         DetectCollisions(multiThread);
-
         SetTime(Timings.CollisionDetect1);
 
         HandleDeferredArbiters();
@@ -165,12 +165,11 @@ public partial class World
         // -> prepare for iteration does calculate new positions, but only linear
         // -> inertia is not transformed in the substeps.
         //
-        for (int i = 0; i < ssp1; i++)
+        //for (int i = 0; i < ssp1; i++)
         {
             // we need to apply the forces each substep. we can not apply
             // them all at once since this would mess with the warm starting
             // of the solver
-            IntegrateForces(multiThread); // FAST SWEEP
             SolveVelocity(multiThread, solverIterations); // FAST SWEEP
             IntegrateVelocity(multiThread); // FAST SWEEP
         }

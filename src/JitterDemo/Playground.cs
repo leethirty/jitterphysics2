@@ -129,8 +129,9 @@ public partial class Playground : RenderWindow
         if ((now - time) > targetTicks)
         {
             time = Stopwatch.GetTimestamp();
-            world.Step(0.05f, multiThread);
         }
+
+        world.Step(0.05f, multiThread);
 
         UpdateDisplayText();
         LayoutGui();

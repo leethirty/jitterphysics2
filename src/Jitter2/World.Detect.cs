@@ -36,6 +36,8 @@ namespace Jitter2;
 
 public partial class World
 {
+    private const float MaxSeparationDistance = 0.02f;
+
     /// <summary>
     /// Specifies an implementation of the <see cref="INarrowPhaseFilter"/> to be used in collision detection.
     /// The default instance is of type <see cref="TriangleEdgeCollisionFilter"/>.
@@ -178,6 +180,15 @@ public partial class World
                 return;
             }
         }
+
+        // Check if the penetration is bigger than the early out fraction
+        float penetration_depth = (pB - pA).Length() - MaxSeparationDistance;
+        if (-penetration_depth >= float.MaxValue)
+            return;
+
+        // Correct point1 for the added separation distance
+        if (penetration > 0.0f)
+            pA -= normal * (MaxSeparationDistance / penetration);
 
         List<JVector> outContactPoints1 = new List<JVector>();
         List<JVector> outContactPoints2 = new List<JVector>();

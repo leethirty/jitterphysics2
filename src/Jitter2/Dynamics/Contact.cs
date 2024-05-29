@@ -372,7 +372,7 @@ public struct ContactData
             NonPenetrationConstraint.CalculateConstraintProperties(ref b1, ref b2, r1, r2, n, normalVelocityBias);
 
             var tangent1 = MathHelper.CreateOrthonormal(n);
-            var tangent2 = tangent1 % n;
+            var tangent2 = n % tangent1;
 
             // Calculate friction part
             if (combinedFriction > 0.0f)
@@ -426,7 +426,7 @@ public struct ContactData
             float idt, bool speculative = false)
         {
             var tangent1 = MathHelper.CreateOrthonormal(normal);
-            var tangent2 = tangent1 % normal;
+            var tangent2 = normal % tangent1;
 
             // Warm starting: Apply impulse from last frame
             if (FrictionConstraint1.IsActive() || FrictionConstraint2.IsActive())
@@ -442,7 +442,7 @@ public struct ContactData
             bool any_impulse_applied = false;
 
             var tangent1 = MathHelper.CreateOrthonormal(normal);
-            var tangent2 = tangent1 % normal;
+            var tangent2 = normal % tangent1;
 
             // First apply all friction constraints (non-penetration is more important than friction)
             // Check if friction is enabled
