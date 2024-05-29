@@ -196,8 +196,8 @@ public struct ContactData
 
             JVector.Subtract(newPoint1, b1Position, out var newWorldRelPoint1);
             JVector.Subtract(newPoint2, b2Position, out var newWorldRelPoint2);
-            JVector.TransposedTransform(newWorldRelPoint1, Body1.Data.Orientation, out var newLocalRelPos1);
-            JVector.TransposedTransform(newWorldRelPoint2, Body2.Data.Orientation, out var newLocalRelPos2);
+            JVector.ConjugatedTransform(newWorldRelPoint1, Body1.Data.Orientation, out var newLocalRelPos1);
+            JVector.ConjugatedTransform(newWorldRelPoint2, Body2.Data.Orientation, out var newLocalRelPos2);
 
             if (UsageMask == 0b1111)
             {
@@ -312,8 +312,8 @@ public struct ContactData
 
             JVector.Subtract(point1, b1.Position, out WorldRelPos1);
             JVector.Subtract(point2, b2.Position, out WorldRelPos2);
-            JVector.TransposedTransform(WorldRelPos1, b1.Orientation, out LocalRelPos1);
-            JVector.TransposedTransform(WorldRelPos2, b2.Orientation, out LocalRelPos2);
+            JVector.ConjugatedTransform(WorldRelPos1, b1.Orientation, out LocalRelPos1);
+            JVector.ConjugatedTransform(WorldRelPos2, b2.Orientation, out LocalRelPos2);
 
             // Calculate collision points relative to body
             var p = 0.5f * (point1 + point2);

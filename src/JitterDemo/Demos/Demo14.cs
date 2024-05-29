@@ -49,6 +49,11 @@ public class EllipsoidShape : Shape
         UpdateShape();
     }
 
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void SupportMap(in JVector direction, out JVector result)
     {
         JVector dir = direction;
@@ -62,11 +67,6 @@ public class EllipsoidShape : Shape
         result.Z *= 0.4f;
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
-    {
-        throw new NotImplementedException();
-    }
-
     public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
     {
         throw new NotImplementedException();
@@ -78,6 +78,11 @@ public class DoubleSphereShape : Shape
     public DoubleSphereShape()
     {
         UpdateShape();
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
     }
 
     public override void SupportMap(in JVector direction, out JVector result)
@@ -97,11 +102,6 @@ public class DoubleSphereShape : Shape
         }
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
-    {
-        throw new NotImplementedException();
-    }
-
     public override JVector SurfaceNormal(JVector inLocalSurfacePosition)
     {
         throw new NotImplementedException();
@@ -113,6 +113,11 @@ public class Icosahedron : Shape
     public Icosahedron()
     {
         UpdateShape();
+    }
+
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
+    {
+        throw new NotImplementedException();
     }
 
     public override void SupportMap(in JVector direction, out JVector result)
@@ -145,11 +150,6 @@ public class Icosahedron : Shape
         }
 
         result = vertices[largestIndex] * 0.5f;
-    }
-
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
-    {
-        throw new NotImplementedException();
     }
 
     public override JVector SurfaceNormal(JVector inLocalSurfacePosition)

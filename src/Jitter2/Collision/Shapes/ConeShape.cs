@@ -101,7 +101,7 @@ public class ConeShape : Shape
         }
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         throw new NotImplementedException();
     }
@@ -111,11 +111,11 @@ public class ConeShape : Shape
         throw new NotImplementedException();
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         const float ZeroEpsilon = 1e-12f;
 
-        JVector upa = orientation.GetColumn(1);
+        JVector upa = orientation.GetBasisY();
 
         float xx = upa.X * upa.X;
         float yy = upa.Y * upa.Y;

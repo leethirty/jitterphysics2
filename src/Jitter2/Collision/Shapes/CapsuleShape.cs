@@ -94,7 +94,7 @@ public class CapsuleShape : Shape
         result.Y += MathF.Sign(direction.Y) * halfLength;
     }
 
-    public override void SupportingFace(in JVector inDirection, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector inDirection, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         // Get direction in horizontal plane
         var direction = inDirection;
@@ -123,11 +123,11 @@ public class CapsuleShape : Shape
         // If projection is roughly equal then return line, otherwise we return nothing as there's only 1 point
         if (MathF.Abs(proj_top - proj_bottom) < cCapsuleProjectionSlop * inDirection.Length())
         {
-            JVector.Transform(support_top, orientation, out var temp);
+            JVector.Transform(support_top, transform, out var temp);
             JVector.Add(temp, position, out temp);
             outVertices.Add(temp);
 
-            JVector.Transform(support_bottom, orientation, out temp);
+            JVector.Transform(support_bottom, transform, out temp);
             JVector.Add(temp, position, out temp);
             outVertices.Add(temp);
         }
@@ -156,9 +156,9 @@ public class CapsuleShape : Shape
     }
 
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
-        JVector delta = halfLength * orientation.GetColumn(1);
+        JVector delta = halfLength * orientation.GetBasisY();
 
         box.Min.X = -radius - MathF.Abs(delta.X);
         box.Min.Y = -radius - MathF.Abs(delta.Y);

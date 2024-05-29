@@ -281,8 +281,10 @@ public partial class World
                 body.Force = JVector.Zero;
                 body.Torque = JVector.Zero;
 
-                JMatrix.Multiply(rigidBody.Orientation, body.inverseInertia, out rigidBody.InverseInertiaWorld);
-                JMatrix.MultiplyTransposed(rigidBody.InverseInertiaWorld, rigidBody.Orientation, out rigidBody.InverseInertiaWorld);
+                var bodyOrientation = JMatrix.CreateFromQuaternion(rigidBody.Orientation);
+
+                JMatrix.Multiply(bodyOrientation, body.inverseInertia, out rigidBody.InverseInertiaWorld);
+                JMatrix.MultiplyTransposed(rigidBody.InverseInertiaWorld, bodyOrientation, out rigidBody.InverseInertiaWorld);
 
                 rigidBody.InverseMass = body.inverseMass;
             }
@@ -661,12 +663,14 @@ public partial class World
             }
 
             JQuaternion dorn = new(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * substep_dt * 0.5f));
-            JQuaternion.CreateFromMatrix(rigidBody.Orientation, out JQuaternion ornA);
+            //JQuaternion.CreateFromMatrix(rigidBody.Orientation, out JQuaternion ornA);
+            JQuaternion ornA = rigidBody.Orientation;
 
             JQuaternion.Multiply(dorn, ornA, out dorn);
 
             dorn.Normalize();
-            JMatrix.CreateFromQuaternion(dorn, out rigidBody.Orientation);
+            //JMatrix.CreateFromQuaternion(dorn, out rigidBody.Orientation);
+            rigidBody.Orientation = dorn;
         }
     }
 

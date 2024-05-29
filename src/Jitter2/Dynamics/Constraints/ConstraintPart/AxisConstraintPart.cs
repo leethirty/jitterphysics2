@@ -249,10 +249,10 @@ namespace Jitter2.Dynamics
                     var deltaAngleLenght = deltaAngle.Length();
                     if (deltaAngleLenght > 0.000001)
                     {
-                        var curRotation = JQuaternion.CreateFromMatrix(b1.Orientation);
+                        var curRotation = b1.Orientation;
                         curRotation = curRotation * JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
                         curRotation.Normalize();
-                        b1.Orientation = JMatrix.CreateFromQuaternion(curRotation);
+                        b1.Orientation = curRotation;
                     }
                 }
 
@@ -265,10 +265,10 @@ namespace Jitter2.Dynamics
                     var deltaAngleLenght = deltaAngle.Length();
                     if (deltaAngleLenght > 0.000001)
                     {
-                        var curRotation = JQuaternion.CreateFromMatrix(b2.Orientation);
+                        var curRotation = b2.Orientation;
                         curRotation = curRotation * JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
                         curRotation.Normalize();
-                        b2.Orientation = JMatrix.CreateFromQuaternion(curRotation);
+                        b2.Orientation = curRotation;
                     }
 
                 }

@@ -106,7 +106,7 @@ public class PointCloudShape : Shape
         result = vertices[maxIndex] + shifted;
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         throw new NotImplementedException();
     }

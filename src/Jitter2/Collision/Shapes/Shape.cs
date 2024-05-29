@@ -140,7 +140,7 @@ public abstract class Shape : ISupportMap, IListIndex, IDynamicTreeProxy
     {
         if (RigidBody == null)
         {
-            CalculateBoundingBox(JMatrix.Identity, JVector.Zero, out JBBox box);
+            CalculateBoundingBox(JQuaternion.Identity, JVector.Zero, out JBBox box);
             WorldBoundingBox = box;
         }
         else
@@ -204,9 +204,10 @@ public abstract class Shape : ISupportMap, IListIndex, IDynamicTreeProxy
     /// <see cref="SupportMap"/> function. Child classes should override this implementation to improve
     /// performance.
     /// </summary>
-    public virtual void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public virtual void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
-        JMatrix oriT = JMatrix.Transpose(orientation);
+        // TODO: Can this be done smarter?
+        JMatrix oriT = JMatrix.Transpose(JMatrix.CreateFromQuaternion(orientation));
 
         SupportMap(oriT.GetColumn(0), out JVector res);
         box.Max.X = JVector.Dot(oriT.GetColumn(0), res);
@@ -239,10 +240,10 @@ public abstract class Shape : ISupportMap, IListIndex, IDynamicTreeProxy
     /// Get the vertices of the face that faces inDirection the most (includes any convex radius). Note that this function can only return faces of convex shapes or triangles
     /// </summary>
     /// <param name="direction">inDirection Direction that the face should be facing (in local space to this shape)</param>
-    /// <param name="orientation"></param>
+    /// <param name="transform"></param>
     /// <param name="position"></param>
     /// <param name="outVertices"> The returned face can be empty( or null) if the shape doesn't have polygons to return (e.g. because it's a sphere). The face will be returned in world space.</param>
-    public abstract void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices);
+    public abstract void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices);
 
     public abstract JVector SurfaceNormal(JVector inLocalSurfacePosition);
 }

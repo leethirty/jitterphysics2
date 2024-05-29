@@ -107,7 +107,7 @@ public class CylinderShape : Shape
         }
     }
 
-    public override void SupportingFace(in JVector inDirection, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector inDirection, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         // Get scaled cylinder
         float halfHeight = 0.5f * height;
@@ -125,11 +125,11 @@ public class CylinderShape : Shape
             float vx = x * f;
             float vz = z * f;
 
-            JVector.Transform(new JVector(vx, halfHeight, vz), orientation, out var temp);
+            JVector.Transform(new JVector(vx, halfHeight, vz), transform, out var temp);
             JVector.Add(temp, position, out temp);
             outVertices.Add(temp);
 
-            JVector.Transform(new JVector(vx, -halfHeight, vz), orientation, out temp);
+            JVector.Transform(new JVector(vx, -halfHeight, vz), transform, out temp);
             JVector.Add(temp, position, out temp);
             outVertices.Add(temp);
         }
@@ -137,10 +137,10 @@ public class CylinderShape : Shape
         {
             // Hitting top or bottom
             var multiplier = y < 0.0f ? new JVector(radius, halfHeight, radius) : new JVector(-radius, -halfHeight, radius);
-            var transform = JMatrix.PreScaled(orientation, multiplier);
+            var transformTemp = JMatrix.PreScaled(transform, multiplier);
             foreach(var v in cTopFace)
             {
-                var temp = JVector.Transform(v, transform);
+                var temp = JVector.Transform(v, transformTemp);
                 JVector.Add(temp, position, out temp);
                 outVertices.Add(temp);
             }
@@ -167,11 +167,11 @@ public class CylinderShape : Shape
     }
 
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         const float ZeroEpsilon = 1e-12f;
 
-        JVector upa = orientation.GetColumn(1);
+        JVector upa = orientation.GetBasisY();
 
         float xx = upa.X * upa.X;
         float yy = upa.Y * upa.Y;

@@ -65,7 +65,7 @@ public class SphereShape : Shape
         JVector.Multiply(result, radius, out result);
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         /* Hit is always a single point, no point in returning anything */
         outVertices = new List<JVector>();
@@ -77,7 +77,7 @@ public class SphereShape : Shape
         return len != 0.0f ? JVector.Multiply(inLocalSurfacePosition, 1f / len) : new JVector(0, 1, 0);
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         box.Min.X = -radius;
         box.Min.Y = -radius;

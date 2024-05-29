@@ -118,7 +118,7 @@ public class TransformedShape : Shape
         }
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         throw new NotImplementedException();
     }
@@ -128,7 +128,7 @@ public class TransformedShape : Shape
         throw new NotImplementedException();
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         if (type == TransformationType.General)
         {
@@ -137,7 +137,8 @@ public class TransformedShape : Shape
         }
         else
         {
-            OriginalShape.CalculateBoundingBox(orientation * this.transformation,
+            JQuaternion quat = JQuaternion.CreateFromMatrix(this.transformation);
+            OriginalShape.CalculateBoundingBox(orientation * quat,
                 JVector.Transform(translation, orientation) + position, out box);
         }
     }

@@ -86,14 +86,14 @@ public class BoxShape : Shape
         result.Z = Math.Sign(direction.Z) * halfSize.Z;
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         JBBox box = new JBBox(-halfSize, halfSize);
         box.GetSupportingFace(direction, out outVertices);
 
         for (int i = 0; i < outVertices.Count; i++)
         {
-            JVector.Transform(outVertices[i], orientation, out var temp);
+            JVector.Transform(outVertices[i], transform, out var temp);
             JVector.Add(temp, position, out temp);
             outVertices[i] = temp;
         }
@@ -111,16 +111,13 @@ public class BoxShape : Shape
         return normal;
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
-        JMatrix.Absolute(in orientation, out JMatrix abs);
-        JVector.Transform(halfSize, abs, out JVector temp);
+        JMatrix.Absolute(JMatrix.CreateFromQuaternion(orientation), out JMatrix absm);
+        var ths = JVector.Transform(halfSize, absm);
 
-        box.Max = temp;
-        JVector.Negate(temp, out box.Min);
-
-        JVector.Add(box.Min, position, out box.Min);
-        JVector.Add(box.Max, position, out box.Max);
+        box.Min = position - ths;
+        box.Max = position + ths;
     }
 
     public override void CalculateMassInertia(out JMatrix inertia, out JVector com, out float mass)

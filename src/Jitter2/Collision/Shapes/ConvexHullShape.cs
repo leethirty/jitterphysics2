@@ -254,12 +254,13 @@ public class ConvexHullShape : Shape
         com *= 1.0f / mass;
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         JVector halfSize = 0.5f * (initBox.Max - initBox.Min);
         JVector center = 0.5f * (initBox.Max + initBox.Min);
 
-        JMatrix.Absolute(in orientation, out JMatrix abs);
+        JMatrix ori = JMatrix.CreateFromQuaternion(orientation);
+        JMatrix.Absolute(in ori, out JMatrix abs);
         JVector.Transform(halfSize, abs, out JVector temp);
         JVector.Transform(center, orientation, out JVector temp2);
 
@@ -269,6 +270,7 @@ public class ConvexHullShape : Shape
         JVector.Add(box.Min, position + temp2, out box.Min);
         JVector.Add(box.Max, position + temp2, out box.Max);
     }
+
 
     private JBBox initBox;
 
@@ -332,7 +334,7 @@ public class ConvexHullShape : Shape
         InternalSupportMap(direction, out result);
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         throw new NotImplementedException();
     }

@@ -195,15 +195,15 @@ public partial class World
         {
             JVector.Subtract(pA, b1.Position, out var relativePos1);
             JVector.Subtract(pB, b2.Position, out var relativePos2);
-            JVector.TransposedTransform(relativePos1, b1.Orientation, out var realRelPos1);
-            JVector.TransposedTransform(relativePos2, b2.Orientation, out var realRelPos2);
+            JVector.ConjugatedTransform(relativePos1, b1.Orientation, out var realRelPos1);
+            JVector.ConjugatedTransform(relativePos2, b2.Orientation, out var realRelPos2);
 
             var penetration_axis = normal * penetration;
-            JVector.TransposedTransform(penetration_axis, b1.Orientation, out var penetration_axis1);
-            JVector.TransposedTransform(penetration_axis, b2.Orientation, out var penetration_axis2);
+            JVector.ConjugatedTransform(penetration_axis, b1.Orientation, out var penetration_axis1);
+            JVector.ConjugatedTransform(penetration_axis, b2.Orientation, out var penetration_axis2);
 
-            sA.SupportingFace(-penetration_axis1, b1.Orientation, b1.Position, out var outVertices1);
-            sB.SupportingFace(penetration_axis2, b2.Orientation, b2.Position, out var outVertices2);
+            sA.SupportingFace(-penetration_axis1, JMatrix.CreateFromQuaternion(b1.Orientation), b1.Position, out var outVertices1);
+            sB.SupportingFace(penetration_axis2, JMatrix.CreateFromQuaternion(b2.Orientation), b2.Position, out var outVertices2);
 
             ManifoldBetweenTwoFacesHelper.ManifoldBetweenTwoFaces(pA, pB, penetration_axis, penetration, outVertices1, outVertices2, outContactPoints1, outContactPoints2);
 

@@ -61,7 +61,7 @@ public struct RigidBodyData
     public JVector Velocity;
     public JVector AngularVelocity;
 
-    public JMatrix Orientation;
+    public JQuaternion Orientation;
     public JMatrix InverseInertiaWorld;
 
     public float InverseMass;
@@ -160,7 +160,7 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
 
         Shapes = new ReadOnlyList<Shape>(shapes);
 
-        Data.Orientation = JMatrix.Identity;
+        Data.Orientation = JQuaternion.Identity;
         SetDefaultMassInertia();
 
         RigidBodyId = World.RequestId();
@@ -255,7 +255,7 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
         }
     }
 
-    public JMatrix Orientation
+    public JQuaternion Orientation
     {
         get => Data.Orientation;
         set
@@ -306,8 +306,9 @@ public sealed class RigidBody : IListIndex, IDebugDrawable
         }
         else
         {
-            JMatrix.Multiply(Data.Orientation, inverseInertia, out Data.InverseInertiaWorld);
-            JMatrix.MultiplyTransposed(Data.InverseInertiaWorld, Data.Orientation, out Data.InverseInertiaWorld);
+            var bodyOrientation = JMatrix.CreateFromQuaternion(Data.Orientation);
+            JMatrix.Multiply(bodyOrientation, inverseInertia, out Data.InverseInertiaWorld);
+            JMatrix.MultiplyTransposed(Data.InverseInertiaWorld, bodyOrientation, out Data.InverseInertiaWorld);
             Data.InverseMass = inverseMass;
         }
     }

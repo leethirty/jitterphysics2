@@ -80,7 +80,7 @@ public class TriangleShape : Shape
 
         if (RigidBody == null) return;
 
-        ref JMatrix orientation = ref RigidBody.Data.Orientation;
+        ref JQuaternion orientation = ref RigidBody.Data.Orientation;
         ref JVector position = ref RigidBody.Data.Position;
 
         JVector.Transform(a, orientation, out a);
@@ -92,7 +92,7 @@ public class TriangleShape : Shape
         c += position;
     }
 
-    public override void CalculateBoundingBox(in JMatrix orientation, in JVector position, out JBBox box)
+    public override void CalculateBoundingBox(in JQuaternion orientation, in JVector position, out JBBox box)
     {
         const float extraMargin = 0.01f;
 
@@ -134,7 +134,7 @@ public class TriangleShape : Shape
         }
     }
 
-    public override void SupportingFace(in JVector direction, in JMatrix orientation, in JVector position, out List<JVector> outVertices)
+    public override void SupportingFace(in JVector direction, in JMatrix transform, in JVector position, out List<JVector> outVertices)
     {
         throw new NotImplementedException();
     }
