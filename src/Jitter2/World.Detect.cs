@@ -188,16 +188,11 @@ public partial class World
 
         // Correct point1 for the added separation distance
         if (penetration > 0.0f)
-            pA -= normal * (MaxSeparationDistance / penetration);
+            pA -= normal * MaxSeparationDistance;
 
         List<JVector> outContactPoints1 = new List<JVector>();
         List<JVector> outContactPoints2 = new List<JVector>();
         {
-            JVector.Subtract(pA, b1.Position, out var relativePos1);
-            JVector.Subtract(pB, b2.Position, out var relativePos2);
-            JVector.ConjugatedTransform(relativePos1, b1.Orientation, out var realRelPos1);
-            JVector.ConjugatedTransform(relativePos2, b2.Orientation, out var realRelPos2);
-
             var penetration_axis = normal * penetration;
             JVector.ConjugatedTransform(penetration_axis, b1.Orientation, out var penetration_axis1);
             JVector.ConjugatedTransform(penetration_axis, b2.Orientation, out var penetration_axis2);

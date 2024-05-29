@@ -92,7 +92,7 @@ public struct JQuaternion
 
     public readonly override string ToString()
     {
-        return $"{W:F6} {X:F6} {Y:F6} {Z:F6}";
+        return $"{X:F6} {Y:F6} {Z:F6} {W:F6}";
     }
 
     public static JQuaternion Subtract(in JQuaternion quaternion1, in JQuaternion quaternion2)
@@ -315,10 +315,9 @@ public struct JQuaternion
 
     public static JQuaternion AngleAxis(float angle, JVector axis)
     {
-        axis = axis * Deg2Rad;
         axis.Normalize();
 
-        var halfAngle = angle * Deg2Rad * 0.5f;
+        var halfAngle = angle * 0.5f;
 
         JQuaternion rotation;
         float sin = MathF.Sin(halfAngle);

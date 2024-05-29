@@ -48,20 +48,20 @@ namespace JitterDemo.Demos
                 shape = new BoxShape(1, 1, 1);
                 body.AddShape(shape);
 
-/*                body = world.CreateRigidBody();
+                body = world.CreateRigidBody();
                 body.Position = new Jitter2.LinearMath.JVector(0, 8, -10);
                 shape = new BoxShape(1, 1, 1);
+                body.AddShape(shape);
+
+/*                body = world.CreateRigidBody();
+                body.Position = new Jitter2.LinearMath.JVector(0, 12, -10);
+                shape = new BoxShape(1, 1, 1);
+                body.AddShape(shape);
+
+                body = world.CreateRigidBody();
+                body.Position = new Jitter2.LinearMath.JVector(0, 16, -10);
+                shape = new BoxShape(1, 1, 1);
                 body.AddShape(shape);*/
-
-                /*                body = world.CreateRigidBody();
-                                body.Position = new Jitter2.LinearMath.JVector(0, 12, -10);
-                                shape = new BoxShape(1, 1, 1);
-                                body.AddShape(shape);
-
-                                body = world.CreateRigidBody();
-                                body.Position = new Jitter2.LinearMath.JVector(0, 16, -10);
-                                shape = new BoxShape(1, 1, 1);
-                                body.AddShape(shape);*/
             }
 
         }

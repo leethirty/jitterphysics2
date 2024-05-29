@@ -276,11 +276,11 @@ public partial class World
                 body.island.MarkedAsActive = true;
             }
 
+            body.Force = JVector.Zero;
+            body.Torque = JVector.Zero;
+
             if (!rigidBody.IsStatic && rigidBody.IsActive)
             {
-                body.Force = JVector.Zero;
-                body.Torque = JVector.Zero;
-
                 var bodyOrientation = JMatrix.CreateFromQuaternion(rigidBody.Orientation);
 
                 JMatrix.Multiply(bodyOrientation, body.inverseInertia, out rigidBody.InverseInertiaWorld);
@@ -641,36 +641,18 @@ public partial class World
 
 
             JVector lvel = rigidBody.Velocity;
-            JVector avel = rigidBody.AngularVelocity;
+            JVector deltaAngle = rigidBody.AngularVelocity * substep_dt;
 
             rigidBody.Position += lvel * substep_dt;
 
-            float angle = avel.Length();
-            JVector axis;
-
-            if (angle < 0.001f)
+            float angle = deltaAngle.Length();
+            if (angle > 0.000001f)
             {
-                // use Taylor's expansions of sync function
-                // axis = body.angularVelocity * (0.5f * timestep - (timestep * timestep * timestep) * (0.020833333333f) * angle * angle);
-                JVector.Multiply(avel,
-                    0.5f * substep_dt - substep_dt * substep_dt * substep_dt * 0.020833333333f * angle * angle,
-                    out axis);
+                var axis = deltaAngle;
+                axis.Normalize();
+                rigidBody.Orientation = JQuaternion.AngleAxis(angle, axis) * rigidBody.Orientation;
+                rigidBody.Orientation.Normalize();
             }
-            else
-            {
-                // sync(fAngle) = sin(c*fAngle)/t
-                JVector.Multiply(avel, (float)Math.Sin(0.5f * angle * substep_dt) / angle, out axis);
-            }
-
-            JQuaternion dorn = new(axis.X, axis.Y, axis.Z, (float)Math.Cos(angle * substep_dt * 0.5f));
-            //JQuaternion.CreateFromMatrix(rigidBody.Orientation, out JQuaternion ornA);
-            JQuaternion ornA = rigidBody.Orientation;
-
-            JQuaternion.Multiply(dorn, ornA, out dorn);
-
-            dorn.Normalize();
-            //JMatrix.CreateFromQuaternion(dorn, out rigidBody.Orientation);
-            rigidBody.Orientation = dorn;
         }
     }
 
