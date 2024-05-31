@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Jitter2.LinearMath;
 using Jitter2.UnmanagedMemory;
 
@@ -88,10 +89,22 @@ public struct ContactData
 
     public void SolvePositionConstraints()
     {
-        if ((UsageMask & 0b0001) != 0) Contact0.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b0010) != 0) Contact1.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b0100) != 0) Contact2.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
-        if ((UsageMask & 0b1000) != 0) Contact3.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, NormalWS);
+        JQuaternion quaternion1 = Body1.Data.Orientation;
+        JQuaternion quaternion2 = Body2.Data.Orientation;
+        JVector pos1 = Body1.Data.Position;
+        JVector pos2 = Body2.Data.Position;
+
+        BodyMotionType motionType1 = Body1.Data.MotionType;
+        BodyMotionType motionType2 = Body2.Data.MotionType;
+        float inverseMass1 = Body1.Data.InverseMass;
+        float inverseMass2 = Body2.Data.InverseMass;
+        JMatrix inverseInertiaWorld1 = Body1.Data.InverseInertiaWorld;
+        JMatrix inverseInertiaWorld2 = Body2.Data.InverseInertiaWorld;
+
+        if ((UsageMask & 0b0001) != 0) Contact0.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, NormalWS, quaternion1, quaternion2, pos1, pos2);
+        if ((UsageMask & 0b0010) != 0) Contact1.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, NormalWS, quaternion1, quaternion2, pos1, pos2);
+        if ((UsageMask & 0b0100) != 0) Contact2.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, NormalWS, quaternion1, quaternion2, pos1, pos2);
+        if ((UsageMask & 0b1000) != 0) Contact3.SolvePositionConstraints(ref Body1.Data, ref Body2.Data, motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, NormalWS, quaternion1, quaternion2, pos1, pos2);
     }
 
     public int UpdatePosition()
@@ -184,6 +197,11 @@ public struct ContactData
     {
         NormalWS = normal;
 
+        var b1Position = Body1.Data.Position;
+        var b2Position = Body2.Data.Position;
+        var b1Rotation = Body1.Data.Orientation;
+        var b2Rotation = Body2.Data.Orientation;
+
         var contactPointCount = contactPoints1.Count;
         for (int i = 0; i < contactPointCount; i++)
         {
@@ -191,13 +209,10 @@ public struct ContactData
             var newPoint2 = contactPoints2[i];
 
             // Check if we have a close contact point from last update
-            var b1Position = Body1.Data.Position;
-            var b2Position = Body2.Data.Position;
-
             JVector.Subtract(newPoint1, b1Position, out var newWorldRelPoint1);
             JVector.Subtract(newPoint2, b2Position, out var newWorldRelPoint2);
-            JVector.ConjugatedTransform(newWorldRelPoint1, Body1.Data.Orientation, out var newLocalRelPos1);
-            JVector.ConjugatedTransform(newWorldRelPoint2, Body2.Data.Orientation, out var newLocalRelPos2);
+            JVector.ConjugatedTransform(newWorldRelPoint1, b1Rotation, out var newLocalRelPos1);
+            JVector.ConjugatedTransform(newWorldRelPoint2, b2Rotation, out var newLocalRelPos2);
 
             if (UsageMask == 0b1111)
             {
@@ -209,19 +224,19 @@ public struct ContactData
                     cref = ref Contact0;
                     index = 0;
                 }
-                if ((newLocalRelPos1 - Contact1.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                else if ((newLocalRelPos1 - Contact1.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
                     && (newLocalRelPos2 - Contact1.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact1;
                     index = 1;
                 }
-                if ((newLocalRelPos1 - Contact2.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                else if ((newLocalRelPos1 - Contact2.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
                     && (newLocalRelPos2 - Contact2.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact2;
                     index = 2;
                 }
-                if ((newLocalRelPos1 - Contact3.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
+                else if ((newLocalRelPos1 - Contact3.LocalRelPos1).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq
                 && (newLocalRelPos2 - Contact3.LocalRelPos2).LengthSquared() <= ContactPointPreserveLambdaMaxDistSq)
                 {
                     cref = ref Contact3;
@@ -230,40 +245,39 @@ public struct ContactData
 
                 if (index != -1)
                 {
-                    cref.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, normal, false, Restitution,
+                    cref.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, newLocalRelPos1, newLocalRelPos2, normal, false, Restitution,
                         Friction, stepTime);
                     UsageMask |= 1 << index;
-                }
 
-                return;
+                    continue;
+                }
             }
 
 
             if ((UsageMask & 0b0001) == 0)
             {
-                Contact0.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, normal, true, Restitution,
+                Contact0.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, newLocalRelPos1, newLocalRelPos2, normal, true, Restitution,
                     Friction, stepTime);
                 UsageMask |= 1 << 0;
             }
             else if ((UsageMask & 0b0010) == 0)
             {
-                Contact1.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, normal, true, Restitution,
+                Contact1.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, newLocalRelPos1, newLocalRelPos2, normal, true, Restitution,
                     Friction, stepTime);
                 UsageMask |= 1 << 1;
             }
             else if ((UsageMask & 0b0100) == 0)
             {
-                Contact2.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, normal, true, Restitution,
+                Contact2.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, newLocalRelPos1, newLocalRelPos2, normal, true, Restitution,
                     Friction, stepTime);
                 UsageMask |= 1 << 2;
             }
             else if ((UsageMask & 0b1000) == 0)
             {
-                Contact3.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, normal, true, Restitution,
+                Contact3.Initialize(ref Body1.Data, ref Body2.Data, newPoint1, newPoint2, newLocalRelPos1, newLocalRelPos2, normal, true, Restitution,
                     Friction, stepTime);
                 UsageMask |= 1 << 3;
             }
-
         }
     }
 
@@ -278,17 +292,24 @@ public struct ContactData
         internal JVector LocalRelPos1;
         internal JVector LocalRelPos2;
 
-        public JVector WorldRelPos1;
-        public JVector WorldRelPos2;
-
         internal AxisConstraintPart NonPenetrationConstraint;
         internal AxisConstraintPart FrictionConstraint1;
         internal AxisConstraintPart FrictionConstraint2;
 
 
-        public void Initialize(ref RigidBodyData b1, ref RigidBodyData b2, in JVector point1, in JVector point2, in JVector n,
+        public void Initialize(ref RigidBodyData b1, ref RigidBodyData b2, in JVector point1, in JVector point2, JVector localRelPos1, JVector localRelPos2, in JVector n,
             bool newContact, float combinedRestitution, float combinedFriction, float stepTime)
         {
+            BodyMotionType motionType1 = b1.MotionType;
+            BodyMotionType motionType2 = b2.MotionType;
+            float inverseMass1 = b1.InverseMass;
+            float inverseMass2 = b2.InverseMass;
+            JMatrix inverseInertiaWorld1 = b1.InverseInertiaWorld;
+            JMatrix inverseInertiaWorld2 = b2.InverseInertiaWorld;
+
+            LocalRelPos1 = localRelPos1;
+            LocalRelPos2 = localRelPos2;
+
             if (newContact)
             {
                 NonPenetrationConstraint = new AxisConstraintPart();
@@ -310,11 +331,6 @@ public struct ContactData
                 FrictionConstraint2.AccImpulse = accImpulse;
             }
 
-            JVector.Subtract(point1, b1.Position, out WorldRelPos1);
-            JVector.Subtract(point2, b2.Position, out WorldRelPos2);
-            JVector.ConjugatedTransform(WorldRelPos1, b1.Orientation, out LocalRelPos1);
-            JVector.ConjugatedTransform(WorldRelPos2, b2.Orientation, out LocalRelPos2);
-
             // Calculate collision points relative to body
             var p = 0.5f * (point1 + point2);
             var r1 = p - b1.Position;
@@ -322,15 +338,15 @@ public struct ContactData
 
             // Calculate velocity of collision points
             JVector relativeVelocity = JVector.Zero;
-            if (b1.MotionType != BodyMotionType.Static && b2.MotionType != BodyMotionType.Static)
+            if (motionType1 != BodyMotionType.Static && motionType2 != BodyMotionType.Static)
             {
                 relativeVelocity = b2.Velocity + b2.AngularVelocity % r2 - b1.Velocity + b1.AngularVelocity % r1;
             }
-            else if (b1.MotionType != BodyMotionType.Static)
+            else if (motionType1 != BodyMotionType.Static)
             {
                 relativeVelocity = -b1.Velocity + b1.AngularVelocity % r1;
             }
-            else if (b2.MotionType != BodyMotionType.Static)
+            else if (motionType2 != BodyMotionType.Static)
             {
                 relativeVelocity = b2.Velocity + b2.AngularVelocity % r2;
             }
@@ -369,7 +385,7 @@ public struct ContactData
                 normalVelocityBias = speculativeContactVelocityBias;
             }
 
-            NonPenetrationConstraint.CalculateConstraintProperties(ref b1, ref b2, r1, r2, n, normalVelocityBias);
+            NonPenetrationConstraint.CalculateConstraintProperties(motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, r1, r2, n, normalVelocityBias);
 
             var tangent1 = MathHelper.CreateOrthonormal(n);
             var tangent2 = n % tangent1;
@@ -383,8 +399,8 @@ public struct ContactData
                 float surface_velocity2 = 0;// inWorldSpaceTangent2.Dot(ws_surface_velocity);
 
                 // Implement friction as 2 AxisContraintParts
-                FrictionConstraint1.CalculateConstraintProperties(ref b1, ref b2, r1, r2, tangent1, surface_velocity1);
-                FrictionConstraint2.CalculateConstraintProperties(ref b1, ref b2, r1, r2, tangent2, surface_velocity2);
+                FrictionConstraint1.CalculateConstraintProperties(motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, r1, r2, tangent1, surface_velocity1);
+                FrictionConstraint2.CalculateConstraintProperties(motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, r1, r2, tangent2, surface_velocity2);
             }
             else
             {
@@ -396,10 +412,10 @@ public struct ContactData
 
         public bool UpdatePosition(ref RigidBodyData b1, ref RigidBodyData b2, JVector normalWS)
         {
-            JVector.Transform(LocalRelPos1, b1.Orientation, out WorldRelPos1);
+            JVector.Transform(LocalRelPos1, b1.Orientation, out var WorldRelPos1);
             JVector.Add(WorldRelPos1, b1.Position, out JVector p1);
 
-            JVector.Transform(LocalRelPos2, b2.Orientation, out WorldRelPos2);
+            JVector.Transform(LocalRelPos2, b2.Orientation, out var WorldRelPos2);
             JVector.Add(WorldRelPos2, b2.Position, out JVector p2);
 
             JVector.Subtract(p1, p2, out JVector dist);
@@ -493,25 +509,25 @@ public struct ContactData
         /// Baumgarte stabilization factor (how much of the position error to 'fix' in 1 update) (unit: dimensionless, 0 = nothing, 1 = 100%)
         private const float Baumgarte = 0.2f;
 
-        private void CalculateNonPenetrationConstraintProperties(ref RigidBodyData b1, ref RigidBodyData b2, JVector p1, JVector p2, JVector normalWS)
+        private void CalculateNonPenetrationConstraintProperties(ref RigidBodyData b1, ref RigidBodyData b2, BodyMotionType motionType1, BodyMotionType motionType2, float inverseMass1, float inverseMass2, JMatrix inverseInertiaWorld1, JMatrix inverseInertiaWorld2, JVector p1, JVector p2, JVector normalWS)
         {
             // Calculate collision points relative to body
             JVector p = 0.5f * (p1 + p2);
             JVector r1 = p - b1.Position;
             JVector r2 = p - b2.Position;
 
-            NonPenetrationConstraint.CalculateConstraintProperties(ref b1, ref b2, r1, r2, normalWS, 0);
+            NonPenetrationConstraint.CalculateConstraintProperties(motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, r1, r2, normalWS, 0);
         }
 
-        public bool SolvePositionConstraints(ref RigidBodyData b1, ref RigidBodyData b2, JVector normalWS)
+        public bool SolvePositionConstraints(ref RigidBodyData b1, ref RigidBodyData b2, BodyMotionType motionType1, BodyMotionType motionType2, float inverseMass1, float inverseMass2, JMatrix inverseInertiaWorld1, JMatrix inverseInertiaWorld2, JVector normalWS, JQuaternion quaternion1, JQuaternion quaternion2, JVector pos1, JVector pos2)
         {
             bool any_impulse_applied = false;
 
             // Calculate new contact point positions in world space (the bodies may have moved)
-            JVector.Transform(LocalRelPos1, b1.Orientation, out WorldRelPos1);
-            JVector.Transform(LocalRelPos2, b2.Orientation, out WorldRelPos2);
-            JVector.Add(WorldRelPos1, b1.Position, out JVector p1);
-            JVector.Add(WorldRelPos2, b2.Position, out JVector p2);
+            JVector.Transform(LocalRelPos1, quaternion1, out var WorldRelPos1);
+            JVector.Transform(LocalRelPos2, quaternion2, out var WorldRelPos2);
+            JVector.Add(WorldRelPos1, pos1, out JVector p1);
+            JVector.Add(WorldRelPos2, pos2, out JVector p2);
 
             // Calculate separation along the normal (negative if interpenetrating)
             // Allow a little penetration by default (PhysicsSettings::mPenetrationSlop) to avoid jittering between contact/no-contact which wipes out the contact cache and warm start impulses
@@ -522,7 +538,7 @@ public struct ContactData
             if (separation < 0.0f)
             {
                 // Update constraint properties (bodies may have moved)
-                CalculateNonPenetrationConstraintProperties(ref b1, ref b2, p1, p2, normalWS);
+                CalculateNonPenetrationConstraintProperties(ref b1, ref b2, motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, p1, p2, normalWS);
 
                 // Solve position errors
                 if (NonPenetrationConstraint.SolvePositionConstraintWithMassOverride(ref b1, ref b2, normalWS, separation, Baumgarte))

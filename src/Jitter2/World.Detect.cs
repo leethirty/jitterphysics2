@@ -210,6 +210,9 @@ public partial class World
             }
         }
 
+        //outContactPoints1.Reverse();
+        //outContactPoints2.Reverse();
+
 
         GetArbiter(sA.ShapeId, sB.ShapeId, sA.RigidBody, sB.RigidBody, out Arbiter arbiter);
 

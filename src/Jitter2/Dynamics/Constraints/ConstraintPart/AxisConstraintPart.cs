@@ -8,7 +8,6 @@ namespace Jitter2.Dynamics
     /// </summary>
     internal struct AxisConstraintPart
     {
-        public JVector Axis;
         /// <summary>
         /// Accumulated Impulse
         /// </summary>
@@ -35,9 +34,9 @@ namespace Jitter2.Dynamics
         /// </summary>
         public JVector RelP2CroAxisInvI;
 
-        public void CalculateConstraintProperties(ref RigidBodyData b1, ref RigidBodyData b2, JVector relP1, JVector relP2, JVector axisWS, float bias = 0)
+        public void CalculateConstraintProperties(BodyMotionType motionType1, BodyMotionType motionType2, float inverseMass1, float inverseMass2, JMatrix inverseInertiaWorld1, JMatrix inverseInertiaWorld2, JVector relP1, JVector relP2, JVector axisWS, float bias = 0)
         {
-            float invEffectiveMass = CalculateInverseEffectiveMass(ref b1, ref b2, relP1, relP2, axisWS);
+            float invEffectiveMass = CalculateInverseEffectiveMass(motionType1, motionType2, inverseMass1, inverseMass2, inverseInertiaWorld1, inverseInertiaWorld2, relP1, relP2, axisWS);
             if (invEffectiveMass == 0.0f)
             {
                 Deactivate();
@@ -48,9 +47,9 @@ namespace Jitter2.Dynamics
             }
         }
 
-        private float CalculateInverseEffectiveMass(ref RigidBodyData b1, ref RigidBodyData b2, JVector relP1, JVector relP2, JVector axisWS)
+        private float CalculateInverseEffectiveMass(BodyMotionType motionType1, BodyMotionType motionType2, float inverseMass1, float inverseMass2, JMatrix inverseInertiaWorld1, JMatrix inverseInertiaWorld2, JVector relP1, JVector relP2, JVector axisWS)
         {
-            if (b1.MotionType != BodyMotionType.Static)
+            if (motionType1 != BodyMotionType.Static)
             {
                 RelP1CroAxis = JVector.Cross(relP1, axisWS);
             }
@@ -59,7 +58,7 @@ namespace Jitter2.Dynamics
                 RelP1CroAxis = JVector.NaN;
             }
 
-            if (b2.MotionType != BodyMotionType.Static)
+            if (motionType2 != BodyMotionType.Static)
             {
                 RelP2CroAxis = JVector.Cross(relP2, axisWS);
             }
@@ -70,10 +69,10 @@ namespace Jitter2.Dynamics
 
             // Calculate inverse effective mass: K = J M^-1 J^T
             float inv_effective_mass = 0;
-            if (b1.MotionType == BodyMotionType.Dynamic)
+            if (motionType1 == BodyMotionType.Dynamic)
             {
-                JVector.Transform(RelP1CroAxis, b1.InverseInertiaWorld, out RelP1CroAxisInvI);
-                inv_effective_mass = b1.InverseMass + JVector.Dot(RelP1CroAxisInvI, RelP1CroAxis);
+                JVector.Transform(RelP1CroAxis, inverseInertiaWorld1, out RelP1CroAxisInvI);
+                inv_effective_mass = inverseMass1 + JVector.Dot(RelP1CroAxisInvI, RelP1CroAxis);
             }
             else
             {
@@ -81,10 +80,10 @@ namespace Jitter2.Dynamics
                 inv_effective_mass = 0.0f;
             }
 
-            if (b2.MotionType == BodyMotionType.Dynamic)
+            if (motionType2 == BodyMotionType.Dynamic)
             {
-                JVector.Transform(RelP2CroAxis, b2.InverseInertiaWorld, out RelP2CroAxisInvI);
-                inv_effective_mass = b2.InverseMass + JVector.Dot(RelP2CroAxisInvI, RelP2CroAxis);
+                JVector.Transform(RelP2CroAxis, inverseInertiaWorld2, out RelP2CroAxisInvI);
+                inv_effective_mass += inverseMass2 + JVector.Dot(RelP2CroAxisInvI, RelP2CroAxis);
             }
             else
             {
@@ -249,8 +248,7 @@ namespace Jitter2.Dynamics
                     var deltaAngleLenght = deltaAngle.Length();
                     if (deltaAngleLenght > 0.000001)
                     {
-                        var curRotation = b1.Orientation;
-                        curRotation = curRotation * JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
+                        var curRotation = JQuaternion.AngleAxis(-deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * b1.Orientation;
                         curRotation.Normalize();
                         b1.Orientation = curRotation;
                     }
@@ -265,8 +263,7 @@ namespace Jitter2.Dynamics
                     var deltaAngleLenght = deltaAngle.Length();
                     if (deltaAngleLenght > 0.000001)
                     {
-                        var curRotation = b2.Orientation;
-                        curRotation = curRotation * JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle);
+                        var curRotation = JQuaternion.AngleAxis(deltaAngleLenght, 1f / deltaAngleLenght * deltaAngle) * b2.Orientation;
                         curRotation.Normalize();
                         b2.Orientation = curRotation;
                     }
