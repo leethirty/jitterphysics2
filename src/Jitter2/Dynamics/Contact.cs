@@ -287,7 +287,7 @@ public struct ContactData
         public const float MaximumBias = 100.0f;
         public const float BiasFactor = 0.0f;
         public const float AllowedPenetration = 0.01f;
-        public const float BreakThreshold = 0.02f;
+        public const float BreakThreshold = 0.2f;
 
         internal JVector LocalRelPos1;
         internal JVector LocalRelPos2;

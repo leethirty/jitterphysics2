@@ -36,7 +36,7 @@ namespace Jitter2;
 
 public partial class World
 {
-    private const float MaxSeparationDistance = 0.00f;
+    private const float MaxSeparationDistance = 0.02f;
 
     /// <summary>
     /// Specifies an implementation of the <see cref="INarrowPhaseFilter"/> to be used in collision detection.
