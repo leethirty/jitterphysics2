@@ -630,7 +630,6 @@ public partial class World
     private void IntegrateCallback(Parallel.Batch batch)
     {
         var span = memRigidBodies.Active[batch.Start..batch.End];
-
         for (int i = 0; i < span.Length; i++)
         {
             ref RigidBodyData rigidBody = ref span[i];
@@ -638,11 +637,10 @@ public partial class World
             if (rigidBody.IsStatic) 
                 continue;
 
-
-            JVector lvel = rigidBody.Velocity;
+            JVector lVel = rigidBody.Velocity;
             JVector deltaAngle = rigidBody.AngularVelocity * substep_dt;
 
-            rigidBody.Position += lvel * substep_dt;
+            rigidBody.Position += lVel * substep_dt;
 
             float angle = deltaAngle.Length();
             if (angle > 0.000001f)

@@ -36,7 +36,7 @@ namespace Jitter2;
 
 public partial class World
 {
-    private const float MaxSeparationDistance = 0.02f;
+    private const float MaxSeparationDistance = 0.00f;
 
     /// <summary>
     /// Specifies an implementation of the <see cref="INarrowPhaseFilter"/> to be used in collision detection.
@@ -192,6 +192,7 @@ public partial class World
 
         List<JVector> outContactPoints1 = new List<JVector>();
         List<JVector> outContactPoints2 = new List<JVector>();
+
         {
             var penetration_axis = normal * penetration;
             JVector.ConjugatedTransform(penetration_axis, b1.Orientation, out var penetration_axis1);
@@ -210,9 +211,8 @@ public partial class World
             }
         }
 
-        //outContactPoints1.Reverse();
-        //outContactPoints2.Reverse();
-
+        outContactPoints1.Reverse();
+        outContactPoints2.Reverse();
 
         GetArbiter(sA.ShapeId, sB.ShapeId, sA.RigidBody, sB.RigidBody, out Arbiter arbiter);
 
