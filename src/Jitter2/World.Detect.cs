@@ -36,7 +36,7 @@ namespace Jitter2;
 
 public partial class World
 {
-    private const float MaxSeparationDistance = 0.02f;
+    private const float MaxSeparationDistance = 0.0f;
 
     /// <summary>
     /// Specifies an implementation of the <see cref="INarrowPhaseFilter"/> to be used in collision detection.
@@ -203,7 +203,7 @@ public partial class World
 
             ManifoldBetweenTwoFacesHelper.ManifoldBetweenTwoFaces(pA, pB, penetration_axis, penetration, outVertices1, outVertices2, outContactPoints1, outContactPoints2);
 
-            normal.Normalize();
+            //normal.Normalize();
 
             if (outContactPoints1.Count > 4)
             {
@@ -211,8 +211,8 @@ public partial class World
             }
         }
 
-        outContactPoints1.Reverse();
-        outContactPoints2.Reverse();
+        //outContactPoints1.Reverse();
+        //outContactPoints2.Reverse();
 
         GetArbiter(sA.ShapeId, sB.ShapeId, sA.RigidBody, sB.RigidBody, out Arbiter arbiter);
 
